@@ -1,129 +1,219 @@
 <div align="center">
-  <h1>🏏 CricNation</h1>
-  <p><strong>A Next-Generation Digital Scoring Platform for Local Cricket</strong></p>
+
+<br/>
+
+<img src="https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js&logoColor=white" />
+<img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
+<img src="https://img.shields.io/badge/tRPC-11-398CCB?style=for-the-badge&logo=trpc&logoColor=white" />
+<img src="https://img.shields.io/badge/Prisma-ORM-2D3748?style=for-the-badge&logo=prisma&logoColor=white" />
+<img src="https://img.shields.io/badge/Vercel-Deployed-000?style=for-the-badge&logo=vercel&logoColor=white" />
+
+<br/><br/>
+
+# 🏏 CricNation
+
+**The professional digital scoring platform for local cricket.**  
+Live scores · Player analytics · Tournament management · Community feed
+
+<br/>
+
+[**→ Live Demo**](https://cricnation.vercel.app) &nbsp;·&nbsp; [**Report a Bug**](https://github.com/Naman-1508/CricNation/issues) &nbsp;·&nbsp; [**Request a Feature**](https://github.com/Naman-1508/CricNation/issues)
+
+<br/>
+
 </div>
-
-<br />
-
-## 📖 About The Project
-
-CricNation is a modern, full-stack digital platform designed to elevate local and neighborhood cricket matches to a professional standard. By leveraging a high-performance technology stack, it provides an international broadcasting-level experience directly to your smartphone or desktop. 
-
-Whether you are organizing a multi-team tournament, tracking your personal batting averages over a season, or following a live match from home, CricNation delivers instantaneous updates and deep analytics through a stunning, premium dark-mode interface.
-
-### ✨ Core Features
-
-*   🔴 **Real-Time Live Scoring Engine**: Ball-by-ball updates broadcasted instantly to all connected clients using WebSockets. No refreshing required.
-*   📊 **Advanced Player Analytics**: Comprehensive dashboards featuring Worm graphs, Manhattan charts, strike rates, and economy tracking to analyze player performance over time.
-*   🏆 **Tournament & Leaderboard Management**: Easily track team standings, tournament brackets, and net run rates across multiple ongoing leagues.
-*   📱 **Social Feed Integration**: A community hub where players can discuss matches, share highlight moments, and interact with the broader local cricketing community.
-*   🎨 **Premium UI/UX**: A highly polished, responsive "dark-first" interface utilizing glassmorphism and micro-animations for an immersive experience.
-*   🔒 **Secure Authentication**: Robust user management and secure login flows powered by NextAuth.
 
 ---
 
-## 🏗️ Architecture & Technology Stack
+## 🎯 What is CricNation?
 
-CricNation is built using a modern, type-safe, and highly scalable serverless architecture:
+CricNation brings a professional broadcasting experience to neighborhood cricket matches. Whether you're scoring a friendly tape-ball game in your colony or organizing a full leather-ball tournament, CricNation gives you the tools that international cricket deserves — ball-by-ball scoring, real-time live updates, deep player analytics, and a social community hub.
 
-*   **Framework**: [Next.js 14 (App Router)](https://nextjs.org/) - React framework for server-rendered applications and API routes.
-*   **API Layer**: [tRPC](https://trpc.io/) - End-to-end typesafe APIs ensuring seamless client-server communication without GraphQL or REST boilerplate.
-*   **Database**: [Neon Serverless Postgres](https://neon.tech/) - High-performance PostgreSQL database designed for the cloud.
-*   **ORM**: [Prisma](https://www.prisma.io/) - Next-generation Node.js and TypeScript ORM for database modeling and migrations.
-*   **Real-time Infrastructure**: [Pusher Channels](https://pusher.com/) - High-throughput WebSockets for instant score broadcasting.
-*   **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [Framer Motion](https://www.framer.com/motion/) - For rapid, utility-first styling and smooth component animations.
-*   **State Management**: [Zustand](https://github.com/pmndrs/zustand) & [React Query](https://tanstack.com/query/latest) - For lightweight client state and intelligent server-state caching.
+**No subscription. No ads. 100% free.**
+
+---
+
+## ✨ Features
+
+| Feature | Description |
+|---|---|
+| 🔴 **Live Ball-by-Ball Scoring** | Real-time score updates via WebSockets. No refresh needed — every boundary and wicket broadcasts instantly to all viewers. |
+| 🏆 **Tournament Management** | Create brackets, manage fixtures, auto-calculate points tables and NRR. Supports all formats. |
+| 📊 **Player Analytics** | Career stats, batting averages, bowling economy, strike rates, Worm graphs, and Manhattan charts. |
+| 👤 **Player Profiles** | Each player gets a full stats card, performance percentages, wagon wheel visualization, and achievement badges. |
+| 🌐 **Social Community Feed** | Post match highlights, react to cricket moments, and engage with your local cricket community. |
+| 📱 **Progressive Web App** | Install CricNation on any phone like a native app. Works offline for basic viewing. |
+| 🔒 **Secure Authentication** | Phone number OTP login. No passwords. Powered by NextAuth.js v5. |
+| 🌍 **Auto Location Detection** | Detects your city automatically so you see matches near you first. |
+
+---
+
+## 🛠️ Tech Stack
+
+```
+Frontend        → Next.js 16 (App Router) + React 18 + Framer Motion + Recharts
+Styling         → Tailwind CSS + Glassmorphism design system
+API Layer       → tRPC v11 (100% type-safe, zero boilerplate)
+Database        → Neon Serverless PostgreSQL + Prisma ORM
+Authentication  → NextAuth.js v5 (Phone OTP flow)
+Real-time       → Pusher Channels (WebSocket live scoring)
+Media           → Cloudinary (player avatars, ground images)
+State           → Zustand (client) + TanStack Query (server)
+Deployment      → Vercel (Edge Network)
+```
 
 ---
 
 ## 🚀 Getting Started
 
-Follow these instructions to set up the project locally on your machine.
-
 ### Prerequisites
+- Node.js **v18+**
+- npm **v9+**
+- Git
 
-Ensure you have the following installed:
-*   [Node.js](https://nodejs.org/) (v18.x or v20.x recommended)
-*   [npm](https://www.npmjs.com/) (v9+)
-*   Git
+### 1. Clone & Install
 
-### Installation
+```bash
+git clone https://github.com/Naman-1508/cricnation.git
+cd cricnation
+npm install
+```
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-username/cricnation.git
-   cd cricnation
-   ```
+### 2. Environment Setup
 
-2. **Install all dependencies**
-   ```bash
-   npm install
-   ```
+Copy the example env file:
+```bash
+cp .env.example .env
+```
 
-3. **Configure Environment Variables**
-   Create a `.env` file in the root directory based on the provided `.env.example`.
-   ```bash
-   cp .env.example .env
-   ```
-   You will need to procure credentials for the following services:
-   *   **Neon**: Create a free PostgreSQL database and grab the Connection String.
-   *   **Pusher**: Create a Channels app to retrieve your App ID, Key, Secret, and Cluster.
-   *   **NextAuth**: Generate a secure 32-byte secret.
+Fill in your credentials for these services:
 
-4. **Initialize the Database**
-   Push the Prisma schema to your connected PostgreSQL database to create the necessary tables.
-   ```bash
-   npx prisma db push
-   ```
-   *(Optional) You can explore your database locally using Prisma Studio:*
-   ```bash
-   npx prisma studio
-   ```
+| Service | Purpose | Free Tier |
+|---|---|---|
+| [Neon](https://neon.tech) | PostgreSQL Database | 500 MB |
+| [Pusher](https://pusher.com) | Live Scoring WebSockets | 200k messages/day |
+| [Cloudinary](https://cloudinary.com) | Image Uploads | 25 GB |
 
-5. **Start the Development Server**
-   Run the application in development mode with Turbopack enabled:
-   ```bash
-   npm run dev
-   ```
+### 3. Database Setup
 
-6. **Open the App**
-   Navigate to [http://localhost:3000](http://localhost:3000) in your browser.
+```bash
+npx prisma db push     # Push schema to your database
+npx prisma studio      # (Optional) Visual database explorer
+```
 
----
+### 4. Run Locally
 
-## 🌐 Production Deployment
-
-CricNation is optimized for deployment on Vercel. 
-
-1. Push your code to a GitHub repository.
-2. Import the project into your Vercel dashboard.
-3. Add all the environment variables from your `.env` file into the Vercel project settings.
-4. Ensure `NEXTAUTH_URL` is set to your actual Vercel production domain.
-5. Deploy the application. Vercel will automatically run the production build process (`npm run build`).
-
-*Note: You must still manually run `npx prisma db push` from your local terminal (configured with your production `DATABASE_URL`) to sync the database schema before the app will function properly.*
+```bash
+npm run dev            # Starts at http://localhost:3000
+```
 
 ---
 
 ## 📁 Project Structure
 
-```text
+```
 cricnation/
-├── app/                  # Next.js App Router (Pages, Layouts, API Routes)
-│   ├── (app)/            # Authenticated application views
-│   ├── (auth)/           # Login and registration flows
-│   └── api/              # NextAuth and tRPC server handlers
-├── components/           # Reusable UI components (Buttons, Inputs, Modals)
-│   ├── analytics/        # Recharts visualizations (Worm, Manhattan)
-│   └── ui/               # Base design system components
-├── prisma/               # Database schema and migrations
-├── server/               # tRPC Backend Router Configuration
-│   └── routers/          # Specific API routers (Match, Player, Tournament)
-└── public/               # Static assets (Images, Icons)
+│
+├── app/
+│   ├── (app)/                  # Main authenticated app shell
+│   │   ├── page.tsx            # Home — Live matches + Quick actions
+│   │   ├── layout.tsx          # Bottom nav + FAB layout
+│   │   ├── score/
+│   │   │   ├── page.tsx        # Match setup wizard
+│   │   │   └── [matchId]/      # Live scoring interface
+│   │   ├── tournaments/        # Tournament list + detail view
+│   │   ├── leaderboard/        # Season rankings with podium
+│   │   ├── social/             # Community feed + post creation
+│   │   └── profile/[id]/       # Player card + analytics
+│   │
+│   ├── (auth)/
+│   │   └── login/              # Phone OTP authentication flow
+│   │
+│   ├── api/
+│   │   ├── trpc/[trpc]/        # tRPC HTTP handler
+│   │   └── auth/[...nextauth]/ # NextAuth.js handler
+│   │
+│   └── _trpc/                  # tRPC client configuration
+│
+├── server/
+│   ├── index.ts                # Root tRPC router
+│   ├── trpc.ts                 # Procedure helpers + context
+│   └── routers/
+│       ├── match.ts            # Match CRUD + scoring logic
+│       ├── tournament.ts       # Tournament + leaderboard
+│       └── player.ts           # Player stats + social feed
+│
+├── components/
+│   ├── analytics/              # Recharts-based visualizations
+│   │   ├── ManhattanChart.tsx
+│   │   └── WormGraph.tsx
+│   └── ui/                     # Reusable design system components
+│
+├── prisma/
+│   └── schema.prisma           # Database models
+│
+└── public/                     # Static assets + PWA manifest
+```
+
+---
+
+## 🌐 Deployment (Vercel)
+
+1. **Push to GitHub**
+   ```bash
+   git add .
+   git commit -m "feat: initial production release"
+   git push origin main
+   ```
+
+2. **Import on Vercel**
+   - Go to [vercel.com](https://vercel.com) → New Project → Import your repository
+   - Framework preset: **Next.js** (auto-detected)
+
+3. **Add Environment Variables**  
+   In Vercel Project Settings → Environment Variables, add all keys from `.env.example` with your real values.
+
+4. **Deploy & Sync DB**
+   ```bash
+   # Run once after first deploy, with production DATABASE_URL in your local .env
+   npx prisma db push
+   ```
+
+---
+
+## 🔑 Environment Variables
+
+```env
+# Database
+DATABASE_URL=                        # Neon Postgres connection string
+
+# Authentication
+NEXTAUTH_SECRET=                     # 32-byte random secret
+NEXTAUTH_URL=                        # Your production URL (skip on Vercel)
+
+# Real-time
+NEXT_PUBLIC_PUSHER_APP_KEY=          # Pusher public key
+NEXT_PUBLIC_PUSHER_CLUSTER=          # Pusher cluster region (e.g., ap2)
+PUSHER_APP_ID=                       # Pusher app ID
+PUSHER_SECRET=                       # Pusher secret key
+
+# Media
+CLOUDINARY_URL=                      # Full Cloudinary URL
 ```
 
 ---
 
 ## 📄 License
 
-This project is open-source and available under the [MIT License](LICENSE).
+MIT License — free to use, fork, and modify.
+
+---
+
+<div align="center">
+  <p>Built with ❤️ for cricket lovers across India 🇮🇳</p>
+  <p>
+    <a href="https://cricnation.vercel.app">🌐 Live App</a> &nbsp;·&nbsp;
+    <a href="https://github.com/Naman-1508/CricNation/issues">🐛 Issues</a> &nbsp;·&nbsp;
+    <a href="https://github.com/Naman-1508/CricNation/pulls">🤝 Contribute</a>
+  </p>
+</div>

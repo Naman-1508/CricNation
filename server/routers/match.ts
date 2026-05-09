@@ -21,13 +21,15 @@ export const matchRouter = router({
     
   create: protectedProcedure
     .input(z.object({
-      homeTeamId: z.string(),
-      awayTeamId: z.string(),
+      teamA: z.string().min(1),
+      teamB: z.string().min(1),
       overs: z.number().min(1).max(50),
+      ballType: z.string().default('Leather'),
+      location: z.string().optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       // return ctx.prisma.match.create({ ... })
-      return { id: "new-match-123", ...input };
+      return { id: `match-${Date.now()}`, ...input };
     }),
     
   updateScore: protectedProcedure
