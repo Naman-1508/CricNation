@@ -9,84 +9,110 @@ import { useEffect, useState } from "react";
 
 // ─── LANDING PAGE (For Unauthenticated Users) ─────────────────────────────────
 function LandingPage() {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.2, delayChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 80, damping: 15 } }
+  };
+
   return (
-    <div className="min-h-screen bg-[#1A1A1A] text-white relative overflow-hidden flex flex-col">
-      {/* Background Effects */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#E8390E]/20 rounded-full blur-[120px] pointer-events-none translate-x-1/3 -translate-y-1/3" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none -translate-x-1/3 translate-y-1/3" />
+    <div className="min-h-[100dvh] bg-[#0A0A0A] text-white relative overflow-hidden flex flex-col selection:bg-[#E8390E] selection:text-white">
+      {/* Dynamic Background Effects */}
+      <motion.div 
+        animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-0 right-0 w-[60vw] h-[60vw] max-w-[600px] max-h-[600px] bg-[#E8390E]/20 rounded-full blur-[100px] pointer-events-none translate-x-1/3 -translate-y-1/3" 
+      />
+      <motion.div 
+        animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        className="absolute bottom-0 left-0 w-[50vw] h-[50vw] max-w-[500px] max-h-[500px] bg-blue-600/15 rounded-full blur-[90px] pointer-events-none -translate-x-1/3 translate-y-1/3" 
+      />
 
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-6 py-5 relative z-10">
-        <div className="flex items-center gap-2">
+      <nav className="flex items-center justify-between px-6 py-5 relative z-20">
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2">
           <span className="text-3xl">🏏</span>
-          <span className="text-xl font-bold tracking-tight">CricNation</span>
-        </div>
-        <Link href="/login">
-          <button className="bg-white/10 hover:bg-white/20 text-white px-5 py-2 rounded-full text-sm font-semibold backdrop-blur-md transition-all">
-            Sign In
-          </button>
-        </Link>
+          <span className="text-xl font-bold tracking-tight text-white">CricNation</span>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+          <Link href="/login">
+            <button className="bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-full text-sm font-semibold backdrop-blur-md transition-all shadow-lg hover:shadow-white/10">
+              Sign In
+            </button>
+          </Link>
+        </motion.div>
       </nav>
 
       {/* Hero Section */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 text-center relative z-10 pt-10 pb-20">
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-[#E8390E] mb-6">
+      <main className="flex-1 flex flex-col items-center justify-center px-6 text-center relative z-20 pt-8 pb-20">
+        <motion.div 
+          variants={containerVariants} 
+          initial="hidden" 
+          animate="show" 
+          className="max-w-4xl mx-auto w-full flex flex-col items-center"
+        >
+          <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-semibold tracking-wide text-[#E8390E] mb-8 shadow-inner shadow-[#E8390E]/10">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E8390E] opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#E8390E]"></span>
             </span>
             Live Ball-by-Ball Scoring
-          </div>
+          </motion.div>
           
-          <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-[1.1] mb-6">
-            Score matches like a <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E8390E] to-amber-500">Pro.</span>
-          </h1>
+          <motion.h1 variants={itemVariants} className="text-5xl md:text-7xl font-black tracking-tighter leading-[1.1] mb-6">
+            Score matches like a <br className="hidden md:block"/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E8390E] via-amber-500 to-yellow-400 drop-shadow-sm">Professional.</span>
+          </motion.h1>
           
-          <p className="text-white/60 text-lg md:text-xl max-w-xl mx-auto mb-10 leading-relaxed">
+          <motion.p variants={itemVariants} className="text-white/60 text-lg md:text-xl max-w-xl mx-auto mb-10 leading-relaxed font-medium">
             The world's most advanced cricket scoring network. Build teams, host tournaments, and broadcast live scores to fans everywhere.
-          </p>
+          </motion.p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full px-4">
             <Link href="/login" className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto bg-[#E8390E] text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-[0_0_40px_rgba(232,57,14,0.4)] hover:shadow-[0_0_60px_rgba(232,57,14,0.6)] transition-all flex items-center justify-center gap-2">
+              <button className="w-full sm:w-auto bg-gradient-to-r from-[#E8390E] to-[#C42E09] text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-[0_0_40px_rgba(232,57,14,0.3)] hover:shadow-[0_0_60px_rgba(232,57,14,0.5)] hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
                 Get Started Free <ChevronRight className="w-5 h-5" />
               </button>
             </Link>
             <Link href="/login" className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto bg-white/5 hover:bg-white/10 border border-white/10 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all backdrop-blur-sm">
+              <button className="w-full sm:w-auto bg-white/5 hover:bg-white/10 border border-white/10 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all backdrop-blur-sm hover:-translate-y-1">
                 Explore Matches
               </button>
             </Link>
-          </div>
-        </motion.div>
+          </motion.div>
 
-        {/* Feature Highlights */}
-        <motion.div 
-          initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mt-24"
-        >
-          <div className="bg-white/5 border border-white/10 rounded-3xl p-6 text-left backdrop-blur-sm">
-            <div className="w-12 h-12 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-4">
-              <Zap className="w-6 h-6 text-blue-400" />
-            </div>
-            <h3 className="text-lg font-bold mb-2">Real-Time Sync</h3>
-            <p className="text-sm text-white/50 leading-relaxed">Pusher WebSockets instantly broadcast every ball to fans watching the digital scorecard.</p>
-          </div>
-          <div className="bg-white/5 border border-white/10 rounded-3xl p-6 text-left backdrop-blur-sm">
-            <div className="w-12 h-12 bg-[#E8390E]/20 rounded-2xl flex items-center justify-center mb-4">
-              <Trophy className="w-6 h-6 text-[#E8390E]" />
-            </div>
-            <h3 className="text-lg font-bold mb-2">Tournament Manager</h3>
-            <p className="text-sm text-white/50 leading-relaxed">Auto-generate fixtures, calculate Net Run Rate (NRR), and manage points tables effortlessly.</p>
-          </div>
-          <div className="bg-white/5 border border-white/10 rounded-3xl p-6 text-left backdrop-blur-sm">
-            <div className="w-12 h-12 bg-green-500/20 rounded-2xl flex items-center justify-center mb-4">
-              <Shield className="w-6 h-6 text-green-400" />
-            </div>
-            <h3 className="text-lg font-bold mb-2">Player Profiles</h3>
-            <p className="text-sm text-white/50 leading-relaxed">Verified Google accounts mean authentic stats, verified achievements, and secure data.</p>
-          </div>
+          {/* Feature Highlights */}
+          <motion.div 
+            variants={containerVariants}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-24"
+          >
+            {[
+              { icon: Zap, title: "Real-Time Sync", desc: "WebSockets instantly broadcast every ball to fans watching the digital scorecard.", color: "blue", bg: "bg-blue-500/20", text: "text-blue-400" },
+              { icon: Trophy, title: "Tournament Manager", desc: "Auto-generate fixtures, calculate NRR, and manage points tables effortlessly.", color: "red", bg: "bg-[#E8390E]/20", text: "text-[#E8390E]" },
+              { icon: Shield, title: "Player Profiles", desc: "Verified Google accounts mean authentic stats and secure tournament data.", color: "green", bg: "bg-green-500/20", text: "text-green-400" },
+            ].map((feat, i) => (
+              <motion.div 
+                key={feat.title}
+                variants={itemVariants}
+                whileHover={{ y: -5, scale: 1.02 }}
+                className="bg-white/5 border border-white/10 rounded-3xl p-6 text-left backdrop-blur-sm hover:bg-white/10 transition-colors"
+              >
+                <div className={`w-12 h-12 ${feat.bg} rounded-2xl flex items-center justify-center mb-4`}>
+                  <feat.icon className={`w-6 h-6 ${feat.text}`} />
+                </div>
+                <h3 className="text-lg font-bold mb-2 text-white/90">{feat.title}</h3>
+                <p className="text-sm text-white/50 leading-relaxed">{feat.desc}</p>
+              </motion.div>
+            ))}
+          </motion.div>
         </motion.div>
       </main>
     </div>
