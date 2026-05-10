@@ -41,7 +41,7 @@ function MiniBarChart({ values }: { values: number[] }) {
 
 export default function ProfilePage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const userId = params.id === "me" ? session?.user?.id : params.id;
 
   const { data: profile, isLoading } = trpc.player.getProfile.useQuery(
@@ -51,7 +51,22 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
 
   const isOwnProfile = session?.user?.id === userId;
 
-  if (isLoading || !userId) {
+  if (params.id === "me" && status === "unauthenticated") {
+    return (
+      <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-4">
+          <Star className="w-8 h-8" />
+        </div>
+        <h2 className="text-xl font-bold text-[#1A1A1A] mb-2">Login Required</h2>
+        <p className="text-[#8A8278] text-sm mb-6">Create an account or login to view your cricket profile, stats, and achievements.</p>
+        <button onClick={() => router.push("/login")} className="bg-[#E8390E] text-white font-semibold px-8 py-3.5 rounded-xl shadow-[0_4px_16px_rgba(232,57,14,0.35)]">
+          Login / Register
+        </button>
+      </div>
+    );
+  }
+
+  if (isLoading || (params.id === "me" && status === "loading")) {
     return (
       <div className="min-h-screen bg-[#FAFAF8] pb-28">
         <div className="h-40 bg-[#F2EFE9] animate-pulse" />
