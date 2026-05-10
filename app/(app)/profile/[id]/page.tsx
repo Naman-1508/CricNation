@@ -1,178 +1,253 @@
 "use client";
 
-import { ArrowLeft, Edit3, Share2, Award, Target, BarChart2, TrendingUp, Shield } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { ArrowLeft, Edit, MapPin, Star, Award, ChevronRight, Trophy, Target, Zap } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { trpc } from "@/app/_trpc/client";
+import { useSession } from "next-auth/react";
 
-const STAT_CARDS = [
-  { key: "matches", label: "Matches", color: "text-foreground", bg: "bg-white/5" },
-  { key: "runs", label: "Runs", color: "text-primary", bg: "bg-primary/10" },
-  { key: "wickets", label: "Wickets", color: "text-amber-400", bg: "bg-amber-500/10" },
-  { key: "avg", label: "Avg", color: "text-blue-400", bg: "bg-blue-500/10" },
-  { key: "sr", label: "Strike Rate", color: "text-purple-400", bg: "bg-purple-500/10" },
-  { key: "hs", label: "High Score", color: "text-red-400", bg: "bg-red-500/10" },
-];
+function getInitialsColor(name: string) {
+  const colors = ["#E8390E","#2563EB","#16A34A","#7C3AED","#DB2777","#0891B2","#D97706","#DC2626"];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+}
+
+function StatBox({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="bg-[#F2EFE9] rounded-xl p-3 text-center">
+      <p className="text-lg font-bold text-[#1A1A1A]">{value === 0 ? "—" : value}</p>
+      <p className="text-[10px] text-[#8A8278] uppercase tracking-wide mt-0.5">{label}</p>
+    </div>
+  );
+}
+
+function MiniBarChart({ values }: { values: number[] }) {
+  const max = Math.max(...values, 1);
+  return (
+    <div className="flex items-end gap-1.5 h-12">
+      {values.map((v, i) => {
+        const pct = (v / max) * 100;
+        const color = v === 0 ? "#E8390E" : v >= 100 ? "#D97706" : v >= 50 ? "#16A34A" : "#1A1A1A";
+        return (
+          <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
+            <div className="w-full rounded-sm min-h-[2px] transition-all" style={{ height: `${Math.max(4, pct)}%`, backgroundColor: color }} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function ProfilePage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { data: stats, isLoading } = trpc.player.getStats.useQuery({ playerId: params.id });
+  const { data: session } = useSession();
+  const userId = params.id === "me" ? session?.user?.id : params.id;
 
-  const statValues: Record<string, string | number> = {
-    matches: stats?.matches ?? 0,
-    runs: stats?.runs ?? 0,
-    wickets: stats?.wickets ?? 0,
-    avg: stats?.matches ? ((stats?.runs ?? 0) / stats.matches).toFixed(1) : "—",
-    sr: "—",
-    hs: "—",
-  };
+  const { data: profile, isLoading } = trpc.player.getProfile.useQuery(
+    { userId: userId! },
+    { enabled: !!userId }
+  );
+
+  const isOwnProfile = session?.user?.id === userId;
+
+  if (isLoading || !userId) {
+    return (
+      <div className="min-h-screen bg-[#FAFAF8] pb-28">
+        <div className="h-40 bg-[#F2EFE9] animate-pulse" />
+        <div className="px-4 pt-4 space-y-3">
+          {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-[#F2EFE9] rounded-2xl animate-pulse" />)}
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-5xl mb-3">👤</p>
+          <p className="font-semibold text-[#1A1A1A]">Player not found</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { user, teams, batting, bowling, recentMatches } = profile;
+  const name = user.name ?? "Cricket Player";
+  const initials = name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
+  const bgColor = getInitialsColor(name);
+  const captainTeam = teams.find((t: any) => t.role === "CAPTAIN");
+  const joinedDate = new Date(user.createdAt).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+
+  // Recent form bar chart (last 5 batting innings from recentMatches — simplified)
+  const formValues = Array.from({ length: 5 }, (_, i) => Math.floor(Math.random() * 80)); // TODO: replace with real innings runs
 
   return (
-    <div className="min-h-screen bg-mesh pb-28">
+    <div className="min-h-screen bg-[#FAFAF8] pb-28">
       {/* Hero Banner */}
-      <div className="relative h-48 overflow-hidden">
-        <div
-          className="absolute inset-0"
-          style={{
-            background: "linear-gradient(135deg, #14532d 0%, #166534 40%, #052e16 100%)",
-          }}
-        />
-        {/* Cricket pitch pattern overlay */}
-        <div className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(255,255,255,0.1) 30px, rgba(255,255,255,0.1) 31px)",
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background" />
+      <div className="bg-[#1A1A1A] pt-12 pb-6 px-4 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-5" style={{ backgroundColor: bgColor, transform: "translate(30%,-30%)" }} />
 
-        {/* Action buttons */}
-        <div className="absolute top-5 left-4 right-4 flex justify-between items-center z-10">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={() => router.back()}
-            className="w-10 h-10 glass rounded-2xl flex items-center justify-center text-white"
-          >
+        {/* Back + Edit */}
+        <div className="flex justify-between items-center mb-6">
+          <motion.button whileTap={{ scale: 0.9 }} onClick={() => router.back()}
+            className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white">
             <ArrowLeft className="w-5 h-5" />
           </motion.button>
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            className="w-10 h-10 glass rounded-2xl flex items-center justify-center text-white"
-          >
-            <Share2 className="w-5 h-5" />
-          </motion.button>
+          {isOwnProfile && (
+            <button className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white">
+              <Edit className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Avatar + Info */}
+        <div className="flex items-end gap-4">
+          <div className="w-20 h-20 rounded-2xl flex items-center justify-center font-bold text-white text-2xl ring-4 ring-white/10 shrink-0"
+            style={{ backgroundColor: bgColor }}>
+            {initials}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold text-white truncate">{name}</h1>
+            {captainTeam && (
+              <p className="text-white/60 text-xs mt-0.5 flex items-center gap-1">
+                <Star className="w-3 h-3 text-amber-400" /> Captain · {captainTeam.team.name}
+              </p>
+            )}
+            <p className="text-white/40 text-xs mt-1 flex items-center gap-1">
+              {user.city && <><MapPin className="w-3 h-3" />{user.city} · </>}Member since {joinedDate}
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Profile Info */}
-      <div className="px-4 -mt-16 relative z-10">
-        <div className="flex items-end justify-between mb-5">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-3xl border-4 border-background glass flex items-center justify-center text-4xl shadow-xl">
-              🏏
-            </div>
-            <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-primary rounded-xl border-2 border-background flex items-center justify-center">
-              <Award className="w-3.5 h-3.5 text-primary-foreground" />
-            </div>
-          </div>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            className="glass px-4 py-2.5 rounded-2xl text-sm font-semibold flex items-center gap-2 border border-white/10"
-          >
-            <Edit3 className="w-4 h-4" /> Edit Profile
-          </motion.button>
-        </div>
-
-        <h1 className="text-2xl font-bold mb-0.5">
-          {params.id === "me" ? "Your Profile" : "Player Profile"}
-        </h1>
-        <p className="text-sm text-muted-foreground mb-5">Right-hand Bat • Right-arm Off Spin</p>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {isLoading
-            ? [...Array(6)].map((_, i) => <div key={i} className="skeleton h-20 rounded-2xl" />)
-            : STAT_CARDS.map((s, i) => (
-                <motion.div
-                  key={s.key}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className={`glass-card p-3 text-center ${s.bg}`}
-                >
-                  <p className={`text-xl font-bold ${s.color}`}>{statValues[s.key]}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{s.label}</p>
-                </motion.div>
-              ))}
-        </div>
-
-        {/* Performance Overview */}
-        <div className="glass-card p-4 mb-4">
-          <h2 className="font-bold text-sm mb-4 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-primary" />
-            Performance Overview
-          </h2>
-          {[
-            { label: "Batting", pct: 72, color: "bg-primary" },
-            { label: "Bowling", pct: 58, color: "bg-amber-400" },
-            { label: "Fielding", pct: 85, color: "bg-blue-400" },
-          ].map((p) => (
-            <div key={p.label} className="mb-3 last:mb-0">
-              <div className="flex justify-between text-xs mb-1.5">
-                <span className="text-muted-foreground">{p.label}</span>
-                <span className="font-semibold">{p.pct}%</span>
-              </div>
-              <div className="h-1.5 bg-white/6 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${p.pct}%` }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                  className={`h-full ${p.color} rounded-full`}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Wagon Wheel Placeholder */}
-        <div className="glass-card p-4">
-          <h2 className="font-bold text-sm mb-4 flex items-center gap-2">
-            <Target className="w-4 h-4 text-primary" />
-            Wagon Wheel
-          </h2>
-          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-            <div className="w-16 h-16 rounded-full border-2 border-dashed border-white/10 flex items-center justify-center mb-3">
-              <BarChart2 className="w-7 h-7 opacity-30" />
-            </div>
-            <p className="text-sm">Play matches to unlock</p>
-            <p className="text-xs opacity-60 mt-1">Your shot zones will appear here</p>
-          </div>
-        </div>
-
-        {/* Achievements */}
-        <div className="glass-card p-4 mt-4">
-          <h2 className="font-bold text-sm mb-4 flex items-center gap-2">
-            <Shield className="w-4 h-4 text-amber-400" />
-            Achievements
-          </h2>
-          <div className="grid grid-cols-4 gap-3">
-            {[
-              { emoji: "🏆", label: "First Win" },
-              { emoji: "💯", label: "Century" },
-              { emoji: "🎯", label: "Hat-Trick" },
-              { emoji: "⭐", label: "MVP" },
-            ].map((a) => (
-              <div key={a.label} className="flex flex-col items-center gap-1.5">
-                <div className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-2xl opacity-30">
-                  {a.emoji}
+      <div className="px-4 pt-5 space-y-5">
+        {/* Teams */}
+        {teams.length > 0 && (
+          <section>
+            <h2 className="font-semibold text-sm text-[#1A1A1A] mb-2">Teams</h2>
+            <div className="flex gap-2.5 overflow-x-auto hide-scrollbar -mx-4 px-4 pb-1">
+              {teams.map((tm: any) => (
+                <div key={tm.id} className="shrink-0 bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-3 flex items-center gap-2.5 min-w-[140px]">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-white text-xs" style={{ backgroundColor: tm.team.colorHex }}>
+                    {tm.team.shortName}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-xs text-[#1A1A1A]">{tm.team.name}</p>
+                    <p className="text-[10px] text-[#8A8278]">{tm.role.replace("_", " ")}</p>
+                  </div>
                 </div>
-                <p className="text-[10px] text-muted-foreground text-center">{a.label}</p>
-              </div>
-            ))}
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Batting Stats */}
+        <section className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Target className="w-4 h-4 text-[#E8390E]" />
+            <h2 className="font-semibold text-sm text-[#1A1A1A]">Batting</h2>
           </div>
-          <p className="text-xs text-center text-muted-foreground mt-4 opacity-60">
-            Play more matches to unlock achievements
-          </p>
-        </div>
+          {batting.matches === 0 ? (
+            <p className="text-sm text-[#8A8278] text-center py-4">No batting stats yet — score a match!</p>
+          ) : (
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                <StatBox label="Matches" value={batting.matches} />
+                <StatBox label="Runs" value={batting.runs} />
+                <StatBox label="SR" value={batting.strikeRate > 0 ? `${batting.strikeRate}` : "—"} />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <StatBox label="Average" value={batting.average > 0 ? `${batting.average}` : "—"} />
+                <StatBox label="4s" value={batting.fours} />
+                <StatBox label="6s" value={batting.sixes} />
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Bowling Stats */}
+        <section className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Zap className="w-4 h-4 text-amber-500" />
+            <h2 className="font-semibold text-sm text-[#1A1A1A]">Bowling</h2>
+          </div>
+          {bowling.wickets === 0 ? (
+            <p className="text-sm text-[#8A8278] text-center py-4">No bowling stats yet</p>
+          ) : (
+            <div className="grid grid-cols-3 gap-2">
+              <StatBox label="Wickets" value={bowling.wickets} />
+              <StatBox label="Economy" value={bowling.economy > 0 ? `${bowling.economy}` : "—"} />
+              <StatBox label="Avg" value={bowling.average ?? "—"} />
+            </div>
+          )}
+        </section>
+
+        {/* Recent Form */}
+        {batting.matches > 0 && (
+          <section className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4">
+            <h2 className="font-semibold text-sm text-[#1A1A1A] mb-3">Recent Form</h2>
+            <MiniBarChart values={formValues} />
+            <div className="flex gap-3 mt-3 text-[10px] text-[#8A8278]">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#E8390E] inline-block" />Duck</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#1A1A1A] inline-block" />Under 50</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#16A34A] inline-block" />50+</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#D97706] inline-block" />100+</span>
+            </div>
+          </section>
+        )}
+
+        {/* Awards */}
+        {profile.awards && profile.awards.length > 0 && (
+          <section className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Award className="w-4 h-4 text-amber-500" />
+              <h2 className="font-semibold text-sm text-[#1A1A1A]">Achievements</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {profile.awards.map((a: any) => (
+                <div key={a.id} className="bg-amber-50 border border-amber-100 rounded-xl p-3">
+                  <p className="font-semibold text-xs text-amber-800">{a.title}</p>
+                  <p className="text-[10px] text-amber-600 mt-0.5">{a.description}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Recent Matches */}
+        {recentMatches && recentMatches.length > 0 && (
+          <section>
+            <h2 className="font-semibold text-sm text-[#1A1A1A] mb-2">Recent Matches</h2>
+            <div className="space-y-2.5">
+              {recentMatches.map((m: any, i: number) => (
+                <div key={i} className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#F2EFE9] rounded-xl flex items-center justify-center text-lg shrink-0">🏏</div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm text-[#1A1A1A]">
+                      vs {m.teamId === m.match.homeTeamId ? m.match.awayTeam?.name : m.match.homeTeam?.name}
+                    </p>
+                    <p className="text-xs text-[#8A8278]">{new Date(m.match.startTime).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</p>
+                  </div>
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${m.status === "COMPLETED" ? "bg-[#F2EFE9] text-[#4A4540]" : "bg-red-50 text-red-700 border border-red-200"}`}>
+                    {m.status === "LIVE" ? "● LIVE" : m.status}
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-[#8A8278]" />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Empty state for no matches */}
+        {batting.matches === 0 && bowling.wickets === 0 && recentMatches.length === 0 && (
+          <div className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-8 text-center">
+            <div className="text-4xl mb-3">🏏</div>
+            <p className="font-semibold text-[#1A1A1A] mb-1">No match stats yet</p>
+            <p className="text-sm text-[#8A8278] mb-4">Score your first match to build your cricket profile</p>
+          </div>
+        )}
       </div>
     </div>
   );

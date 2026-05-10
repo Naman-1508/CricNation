@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Trophy, Medal, Search, TrendingUp, Zap, Target } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Trophy, Medal, Search, TrendingUp, Zap, Target } from "lucide-react";
 import { trpc } from "@/app/_trpc/client";
 
 const FILTERS = [
@@ -12,50 +12,82 @@ const FILTERS = [
   { key: "mvp", label: "MVP", icon: Trophy },
 ];
 
-const RANK_COLORS = [
-  "from-yellow-400 to-amber-500",
-  "from-slate-300 to-slate-400",
-  "from-amber-600 to-orange-700",
-];
+const PERIODS = ["This Week", "This Month", "All Time"];
+
+function getInitials(name: string) {
+  return name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function PodiumCard({ player, rank }: { player: any; rank: number }) {
+  const heights = { 1: "h-28", 2: "h-20", 3: "h-16" };
+  const colors = { 1: "text-yellow-600 bg-yellow-50 border-yellow-200", 2: "text-slate-500 bg-slate-50 border-slate-200", 3: "text-amber-700 bg-amber-50 border-amber-200" };
+  const crowns = { 1: "👑", 2: "🥈", 3: "🥉" };
+  if (!player) return <div />;
+
+  return (
+    <div className={`flex flex-col items-center justify-end ${heights[rank as keyof typeof heights] ?? "h-16"}`}>
+      {rank === 1 && <span className="text-xl mb-1">👑</span>}
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white text-sm mb-2 ${rank === 1 ? "ring-2 ring-yellow-400 ring-offset-2" : ""}`}
+        style={{ backgroundColor: `hsl(${Math.abs(player.name?.charCodeAt(0) * 7) % 360},60%,50%)` }}>
+        {getInitials(player.name ?? "?")}
+      </div>
+      <p className="text-xs font-semibold text-[#1A1A1A] text-center leading-tight truncate w-20 text-center">{player.name}</p>
+      <p className="text-sm font-bold text-[#E8390E]">{player.stat}</p>
+      <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full border mt-1 ${colors[rank as keyof typeof colors]}`}>
+        #{rank}
+      </div>
+    </div>
+  );
+}
 
 export default function LeaderboardPage() {
   const [filter, setFilter] = useState("batting");
-  const { data: batters, isLoading } = trpc.tournament.getLeaderboard.useQuery();
+  const [period, setPeriod] = useState("All Time");
+  const [search, setSearch] = useState("");
+  const { data: leaderboard, isLoading } = trpc.tournament.getLeaderboard.useQuery();
+
+  const filtered = (leaderboard ?? []).filter(p =>
+    search ? p.name.toLowerCase().includes(search.toLowerCase()) : true
+  );
+
+  const top3 = [filtered[1], filtered[0], filtered[2]];
 
   return (
-    <div className="min-h-screen bg-mesh pb-28">
+    <div className="min-h-screen bg-[#FAFAF8] pb-28">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-white/5 px-5 pt-5 pb-4">
-        <div className="flex items-center justify-between">
+      <div className="bg-white border-b border-[rgba(107,74,42,0.1)] px-5 pt-12 pb-4 sticky top-0 z-20">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-xs text-muted-foreground mb-0.5">Season Rankings</p>
-            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              <Trophy className="w-6 h-6 text-primary" />
-              Leaderboard
+            <h1 className="text-2xl font-bold text-[#1A1A1A] flex items-center gap-2">
+              <Trophy className="w-6 h-6 text-amber-500" /> Leaderboard
             </h1>
           </div>
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            className="w-10 h-10 rounded-2xl glass flex items-center justify-center text-muted-foreground"
-          >
-            <Search className="w-4.5 h-4.5" />
-          </motion.button>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex gap-2 mt-4 overflow-x-auto pb-1 hide-scrollbar">
-          {FILTERS.map((f) => {
+        {/* Search */}
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8A8278]" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search player..."
+            className="w-full bg-[#F2EFE9] rounded-xl py-2.5 pl-9 pr-4 text-sm focus:outline-none" />
+        </div>
+
+        {/* Period Pills */}
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1 mb-3">
+          {PERIODS.map(p => (
+            <button key={p} onClick={() => setPeriod(p)}
+              className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${period === p ? "bg-[#1A1A1A] text-white" : "bg-[#F2EFE9] text-[#4A4540]"}`}>
+              {p}
+            </button>
+          ))}
+        </div>
+
+        {/* Category Tabs */}
+        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+          {FILTERS.map(f => {
             const active = filter === f.key;
             return (
-              <button
-                key={f.key}
-                onClick={() => setFilter(f.key)}
-                className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-2xl text-xs font-semibold transition-all ${
-                  active
-                    ? "bg-primary text-primary-foreground shadow-[0_0_12px_rgba(34,197,94,0.35)]"
-                    : "glass text-muted-foreground hover:text-foreground"
-                }`}
-              >
+              <button key={f.key} onClick={() => setFilter(f.key)}
+                className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-xl text-xs font-semibold transition-colors ${active ? "bg-[#E8390E] text-white" : "bg-[#F2EFE9] text-[#4A4540] hover:bg-[rgba(107,74,42,0.1)]"}`}>
                 <f.icon className="w-3.5 h-3.5" />
                 {f.label}
               </button>
@@ -64,93 +96,72 @@ export default function LeaderboardPage() {
         </div>
       </div>
 
-      <div className="px-4 pt-5 space-y-3">
-        {/* Top 3 Podium */}
-        {!isLoading && batters && batters.length >= 3 && (
-          <div className="grid grid-cols-3 gap-2 mb-6">
-            {[batters[1], batters[0], batters[2]].map((player: any, podiumIdx: number) => {
-              const realRank = podiumIdx === 1 ? 1 : podiumIdx === 0 ? 2 : 3;
-              const heights = ["h-20", "h-28", "h-16"];
-              return (
-                <motion.div
-                  key={player?.rank}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: podiumIdx * 0.1 }}
-                  className={`glass-card flex flex-col items-center justify-end p-3 ${heights[podiumIdx]} relative`}
-                >
-                  {realRank === 1 && (
-                    <span className="absolute -top-2 text-base">👑</span>
-                  )}
-                  <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${RANK_COLORS[realRank - 1]} flex items-center justify-center text-sm font-bold text-white shadow-lg mb-1`}>
-                    {realRank}
-                  </div>
-                  <p className="text-[10px] font-semibold text-center leading-tight truncate w-full text-center">{player?.name}</p>
-                  <p className="text-xs font-bold text-primary">{player?.stat}</p>
-                </motion.div>
-              );
-            })}
+      <div className="px-4 pt-5 space-y-4">
+        {isLoading ? (
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => <div key={i} className="bg-white rounded-2xl border border-[rgba(107,74,42,0.13)] h-16 animate-pulse" />)}
           </div>
-        )}
-
-        {/* Full Ranking List */}
-        <div className="glass-card overflow-hidden">
-          <div className="flex justify-between items-center px-4 py-3 border-b border-white/5">
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Rank & Player</span>
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-              {filter === "batting" ? "Runs" : filter === "bowling" ? "Wickets" : "Score"}
-            </span>
+        ) : !filtered || filtered.length === 0 ? (
+          <div className="py-20 flex flex-col items-center gap-3">
+            <Trophy className="w-12 h-12 text-[rgba(107,74,42,0.2)]" />
+            <p className="font-semibold text-[#1A1A1A]">{search ? "No players found" : "No rankings yet"}</p>
+            <p className="text-sm text-[#8A8278]">{search ? "Try a different name" : "Complete matches to generate stats"}</p>
           </div>
-
-          <AnimatePresence mode="wait">
-            {isLoading ? (
-              <div className="p-6 space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="skeleton h-12 rounded-xl" />
-                ))}
+        ) : (
+          <>
+            {/* Podium — only show when not searching */}
+            {!search && filtered.length >= 3 && (
+              <div className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-5">
+                <p className="text-xs text-[#8A8278] font-medium uppercase tracking-wide mb-4">Top Performers</p>
+                <div className="grid grid-cols-3 gap-2 items-end">
+                  <PodiumCard player={filtered[1]} rank={2} />
+                  <PodiumCard player={filtered[0]} rank={1} />
+                  <PodiumCard player={filtered[2]} rank={3} />
+                </div>
               </div>
-            ) : !batters || batters.length === 0 ? (
-              <div className="py-16 flex flex-col items-center gap-3 text-muted-foreground">
-                <Trophy className="w-10 h-10 opacity-20" />
-                <p className="text-sm">No rankings yet</p>
-                <p className="text-xs opacity-60">Complete matches to populate stats</p>
-              </div>
-            ) : (
-              <motion.div key={filter} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                {batters.map((player: any, idx: number) => (
-                  <motion.div
-                    key={player.rank}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.04 }}
-                    className="flex justify-between items-center px-4 py-3.5 border-b border-white/4 last:border-0 hover:bg-white/3 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-7 h-7 rounded-xl flex items-center justify-center font-bold text-xs ${
-                        idx === 0 ? "bg-yellow-500/20 text-yellow-400" :
-                        idx === 1 ? "bg-slate-500/20 text-slate-300" :
-                        idx === 2 ? "bg-amber-700/20 text-amber-600" :
-                        "bg-muted text-muted-foreground"
-                      }`}>
-                        {idx < 3 ? <Medal className="w-3.5 h-3.5" /> : player.rank}
-                      </div>
-                      <div className="w-9 h-9 bg-primary/15 rounded-xl flex items-center justify-center text-sm">
-                        🏏
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm">{player.name}</p>
-                        <p className="text-xs text-muted-foreground">{player.detail}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-primary">{player.stat}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
             )}
-          </AnimatePresence>
-        </div>
+
+            {/* Rankings List */}
+            <div className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl overflow-hidden">
+              {/* Table Header */}
+              <div className="flex items-center px-4 py-2.5 bg-[#F2EFE9] border-b border-[rgba(107,74,42,0.1)]">
+                <span className="text-[10px] font-bold text-[#8A8278] uppercase tracking-wider w-8">#</span>
+                <span className="text-[10px] font-bold text-[#8A8278] uppercase tracking-wider flex-1 ml-12">Player</span>
+                <span className="text-[10px] font-bold text-[#8A8278] uppercase tracking-wider text-right">
+                  {filter === "batting" ? "Runs" : filter === "bowling" ? "Wkts" : "Score"}
+                </span>
+              </div>
+
+              <AnimatePresence mode="wait">
+                <motion.div key={filter} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  {filtered.map((player: any, idx: number) => (
+                    <motion.div key={player.playerId ?? idx} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.03 }}
+                      className={`flex items-center px-4 py-3 border-b border-[rgba(107,74,42,0.07)] last:border-0 ${idx < 3 ? "hover:bg-amber-50/50" : "hover:bg-[#FAFAF8]"} transition-colors`}>
+                      {/* Rank */}
+                      <div className={`w-8 text-sm font-bold font-mono ${idx === 0 ? "text-yellow-500" : idx === 1 ? "text-slate-400" : idx === 2 ? "text-amber-600" : "text-[#8A8278]"}`}>
+                        {idx < 3 ? ["🥇","🥈","🥉"][idx] : player.rank}
+                      </div>
+                      {/* Avatar */}
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white text-xs mr-3 shrink-0"
+                        style={{ backgroundColor: `hsl(${Math.abs((player.name ?? "").charCodeAt(0) * 7) % 360},55%,50%)` }}>
+                        {getInitials(player.name ?? "?")}
+                      </div>
+                      {/* Name + detail */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-[#1A1A1A] truncate">{player.name}</p>
+                        <p className="text-xs text-[#8A8278]">{player.detail}</p>
+                      </div>
+                      {/* Stat */}
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-[#E8390E] font-mono">{filter === "bowling" ? player.wickets : player.stat}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

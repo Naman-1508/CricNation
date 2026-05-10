@@ -1,151 +1,140 @@
 "use client";
 
-import { Trophy, Search, Filter, Plus, Calendar, Users, ChevronRight } from "lucide-react";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { trpc } from "@/app/_trpc/client";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Filter, ChevronRight, Users, Calendar, Trophy, DollarSign } from "lucide-react";
+import Link from "next/link";
+import { trpc } from "@/app/_trpc/client";
 
-const TAGS = ["All", "Live", "Upcoming", "My Tournaments", "Completed"];
+const FORMAT_COLORS: Record<string, string> = {
+  T10: "bg-purple-50 text-purple-700 border-purple-200",
+  T20: "bg-blue-50 text-blue-700 border-blue-200",
+  ODI: "bg-green-50 text-green-700 border-green-200",
+  TEST: "bg-amber-50 text-amber-700 border-amber-200",
+};
+
+const STATUS_STYLES: Record<string, string> = {
+  UPCOMING: "bg-[#F2EFE9] text-[#4A4540]",
+  LIVE: "bg-red-50 text-red-700 border border-red-200",
+  COMPLETED: "bg-[#F2EFE9] text-[#8A8278]",
+};
+
+const TABS = ["Open", "My Tournaments"];
 
 export default function TournamentsPage() {
-  const { data: tournaments, isLoading } = trpc.tournament.getAll.useQuery();
-  const [activeTag, setActiveTag] = useState("All");
+  const [tab, setTab] = useState(0);
+  const { data: all, isLoading } = trpc.tournament.getAll.useQuery();
+  const { data: open, isLoading: openLoading } = trpc.tournament.getOpenTournaments.useQuery();
 
-  const filtered = tournaments?.filter((t: any) => {
-    if (activeTag === "All") return true;
-    if (activeTag === "Live") return t.status === "LIVE";
-    if (activeTag === "Upcoming") return t.status === "UPCOMING";
-    if (activeTag === "Completed") return t.status === "COMPLETED";
-    return true;
-  });
+  const list = tab === 0 ? open : all;
+  const loading = tab === 0 ? openLoading : isLoading;
 
   return (
-    <div className="min-h-screen bg-mesh pb-28">
+    <div className="min-h-screen bg-[#FAFAF8] pb-28">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-white/5 px-5 pt-5 pb-4">
-        <div className="flex items-center justify-between">
+      <div className="bg-white border-b border-[rgba(107,74,42,0.1)] px-5 pt-12 pb-4 sticky top-0 z-20">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-xs text-muted-foreground mb-0.5">Compete & Win</p>
-            <h1 className="text-2xl font-bold tracking-tight">Tournaments</h1>
+            <h1 className="text-2xl font-bold text-[#1A1A1A] flex items-center gap-2">
+              <Trophy className="w-6 h-6 text-amber-500" /> Tournaments
+            </h1>
           </div>
-          <div className="flex gap-2">
-            <motion.button whileTap={{ scale: 0.9 }} className="w-10 h-10 rounded-2xl glass flex items-center justify-center text-muted-foreground">
-              <Search className="w-4.5 h-4.5" />
-            </motion.button>
-            <motion.button whileTap={{ scale: 0.9 }} className="w-10 h-10 rounded-2xl glass flex items-center justify-center text-muted-foreground">
-              <Filter className="w-4.5 h-4.5" />
-            </motion.button>
-          </div>
+          <Link href="/tournaments/new">
+            <motion.div whileTap={{ scale: 0.9 }}
+              className="w-10 h-10 bg-[#E8390E] rounded-2xl flex items-center justify-center shadow-[0_4px_12px_rgba(232,57,14,0.35)]">
+              <Plus className="w-5 h-5 text-white" strokeWidth={2.5} />
+            </motion.div>
+          </Link>
         </div>
 
-        {/* Filter Tags */}
-        <div className="flex gap-2 mt-4 overflow-x-auto hide-scrollbar pb-1">
-          {TAGS.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => setActiveTag(tag)}
-              className={`whitespace-nowrap px-4 py-1.5 rounded-2xl text-xs font-semibold transition-all ${
-                activeTag === tag
-                  ? "bg-primary text-primary-foreground shadow-[0_0_12px_rgba(34,197,94,0.35)]"
-                  : "glass text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {tag}
+        {/* Tabs */}
+        <div className="flex gap-1 bg-[#F2EFE9] p-1 rounded-xl">
+          {TABS.map((t, i) => (
+            <button key={t} onClick={() => setTab(i)}
+              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${tab === i ? "bg-white text-[#1A1A1A] shadow-sm" : "text-[#8A8278]"}`}>
+              {t}
             </button>
           ))}
         </div>
       </div>
 
-      <div className="px-4 pt-5 space-y-4">
-        {/* Create Tournament Banner */}
-        <Link href="/tournaments/new">
-          <motion.div
-            whileTap={{ scale: 0.98 }}
-            className="relative rounded-2xl overflow-hidden p-5 flex items-center justify-between"
-            style={{
-              background: "linear-gradient(135deg, #16a34a 0%, #15803d 40%, #14532d 100%)",
-            }}
-          >
-            {/* Decorative orbs */}
-            <div className="absolute top-0 right-16 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
-            <div className="absolute -bottom-6 right-4 w-20 h-20 bg-white/5 rounded-full blur-xl" />
-            <div className="relative z-10">
-              <p className="text-white/70 text-xs font-medium mb-1">Organise your own</p>
-              <h2 className="text-white font-bold text-lg leading-tight mb-1.5">Host a Tournament</h2>
-              <div className="flex items-center gap-3 text-emerald-200 text-xs">
-                <span>✓ 100% Free</span>
-                <span>✓ Auto-Fixtures</span>
-                <span>✓ Points Table</span>
-              </div>
-            </div>
-            <div className="relative z-10 w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm shrink-0">
-              <Plus className="w-6 h-6 text-white" strokeWidth={2.5} />
-            </div>
-          </motion.div>
-        </Link>
+      <div className="px-4 pt-5 space-y-3">
+        {loading ? (
+          [...Array(3)].map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl border border-[rgba(107,74,42,0.13)] h-28 animate-pulse" />
+          ))
+        ) : !list || list.length === 0 ? (
+          <div className="flex flex-col items-center justify-center pt-24 text-center px-6">
+            <div className="text-6xl mb-4">🏆</div>
+            <h2 className="text-xl font-bold text-[#1A1A1A] mb-2">
+              {tab === 0 ? "No open tournaments" : "No tournaments yet"}
+            </h2>
+            <p className="text-[#8A8278] text-sm mb-6">
+              {tab === 0 ? "Check back soon or host your own!" : "Create your first tournament"}
+            </p>
+            <Link href="/tournaments/new">
+              <button className="bg-[#E8390E] text-white font-semibold px-8 py-3.5 rounded-xl shadow-[0_4px_16px_rgba(232,57,14,0.35)]">
+                Host a Tournament
+              </button>
+            </Link>
+          </div>
+        ) : (
+          (list as any[]).map((t: any, i: number) => (
+            <Link href={`/tournaments/${t.id}`} key={t.id}>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                whileTap={{ scale: 0.98 }}
+                className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 hover:border-[rgba(107,74,42,0.25)] transition-colors">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-12 h-12 bg-[#F2EFE9] rounded-xl flex items-center justify-center text-2xl shrink-0">🏆</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="font-bold text-[#1A1A1A] truncate">{t.name}</h3>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg shrink-0 ${STATUS_STYLES[t.status] ?? STATUS_STYLES.UPCOMING}`}>
+                        {t.status === "LIVE" ? "● LIVE" : t.status}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${FORMAT_COLORS[t.format] ?? "bg-[#F2EFE9] text-[#4A4540]"}`}>
+                        {t.format}
+                      </span>
+                      <span className="text-xs text-[#8A8278]">by {t.organizer?.name ?? "Organizer"}</span>
+                    </div>
+                  </div>
+                </div>
 
-        {/* Tournament List */}
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            <div className="space-y-3">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="skeleton h-24 rounded-2xl" />
-              ))}
-            </div>
-          ) : !filtered || filtered.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="py-20 flex flex-col items-center gap-3 text-muted-foreground"
-            >
-              <Trophy className="w-12 h-12 opacity-15" />
-              <p className="font-medium">No tournaments found</p>
-              <p className="text-xs opacity-60">Be the first to host one!</p>
-            </motion.div>
-          ) : (
-            <motion.div key={activeTag} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-              {filtered.map((t: any, i: number) => (
-                <Link href={`/tournaments/${t.id}`} key={t.id}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.06 }}
-                    className="glass-card p-4 flex gap-4 card-hover"
-                  >
-                    <div className="w-14 h-14 bg-primary/15 rounded-2xl flex items-center justify-center shrink-0">
-                      <Trophy className="w-7 h-7 text-primary" />
+                <div className="flex items-center gap-4 text-xs text-[#8A8278]">
+                  <span className="flex items-center gap-1">
+                    <Users className="w-3.5 h-3.5" />
+                    {t._count?.registrations ?? t._count?.teams ?? 0}/{t.maxTeams ?? "∞"} teams
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {new Date(t.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                  </span>
+                  {t.entryFee === 0 ? (
+                    <span className="text-green-700 bg-green-50 border border-green-200 font-bold px-2 py-0.5 rounded-full">Free</span>
+                  ) : (
+                    <span className="flex items-center gap-0.5">₹{t.entryFee}</span>
+                  )}
+                </div>
+
+                {/* Registration progress */}
+                {t.registrationOpen && t.maxTeams && (
+                  <div className="mt-3">
+                    <div className="h-1.5 bg-[#F2EFE9] rounded-full overflow-hidden">
+                      <div className="h-full bg-[#E8390E] rounded-full transition-all"
+                        style={{ width: `${Math.min(100, ((t._count?.registrations ?? 0) / t.maxTeams) * 100)}%` }} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start mb-1.5">
-                        <h3 className="font-semibold text-sm leading-tight truncate pr-2">{t.name}</h3>
-                        <span className={
-                          t.status === "LIVE" ? "pill-live" :
-                          t.status === "UPCOMING" ? "pill-upcoming" :
-                          "pill-completed"
-                        }>
-                          {t.status}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Users className="w-3 h-3" />
-                          {t.teams || 0} Teams
-                        </span>
-                        {t.location && (
-                          <span className="flex items-center gap-1 truncate">
-                            📍 {t.location}
-                          </span>
-                        )}
-                      </div>
+                    <div className="flex justify-between text-[10px] text-[#8A8278] mt-1">
+                      <span>{t._count?.registrations ?? 0} registered</span>
+                      <span>{t.maxTeams - (t._count?.registrations ?? 0)} spots left</span>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 self-center" />
-                  </motion.div>
-                </Link>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  </div>
+                )}
+              </motion.div>
+            </Link>
+          ))
+        )}
       </div>
     </div>
   );
