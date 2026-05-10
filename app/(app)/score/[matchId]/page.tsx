@@ -6,6 +6,8 @@ import { RotateCcw, Settings, Activity, History, X, Check } from "lucide-react";
 import { trpc } from "@/app/_trpc/client";
 import { useRouter } from "next/navigation";
 
+import { pusherClient } from "@/lib/pusherClient";
+
 // ─── Ball dot display ───────────────────────────────────────────
 function BallDot({ val }: { val: string }) {
   const base = "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold";
@@ -62,7 +64,7 @@ function UndoSheet({ isOpen, lastBall, onClose, onConfirm }: {
             <p className="text-[#8A8278] text-sm mb-5">Last entry: <span className="font-semibold text-[#1A1A1A]">{lastBall}</span></p>
             <div className="grid grid-cols-2 gap-3">
               <button onClick={onClose} className="py-3 rounded-xl bg-[#F2EFE9] text-[#4A4540] font-medium">Cancel</button>
-              <button onClick={onConfirm} className="py-3 rounded-xl bg-amber-500 text-white font-semibold">Undo Ball</button>
+              <button onClick={onConfirm} className="py-3 rounded-xl bg-amber-50 text-amber-700 font-semibold border border-amber-200">Undo Ball</button>
             </div>
           </motion.div>
         </>
@@ -73,13 +75,42 @@ function UndoSheet({ isOpen, lastBall, onClose, onConfirm }: {
 
 // ─── Main Scoring Page ──────────────────────────────────────────
 export default function MatchScoringPage({ params }: { params: { matchId: string } }) {
-  const { data: match, isLoading } = trpc.match.getById.useQuery({ id: params.matchId });
+  const { data: match, isLoading, refetch } = trpc.match.getById.useQuery({ id: params.matchId });
   const [currentOver, setCurrentOver] = useState<string[]>([]);
   const [totalScore, setTotalScore] = useState({ runs: 0, wickets: 0, balls: 0 });
   const [isWicketOpen, setIsWicketOpen] = useState(false);
   const [isUndoOpen, setIsUndoOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [target] = useState<number | null>(null);
+
+  // Sync state with backend data on load
+  useEffect(() => {
+    if (match) {
+      setCurrentOver(match.currentOver || []);
+      setTotalScore({
+        runs: match.score.runs,
+        wickets: match.score.wickets,
+        balls: match.score.balls
+      });
+    }
+  }, [match]);
+
+  // Subscribe to Pusher for real-time spectator updates
+  useEffect(() => {
+    const channelName = `match-${params.matchId}`;
+    const channel = pusherClient.subscribe(channelName);
+
+    channel.bind("score-update", (data: { ball: string, runsAdded: number, isWicket: boolean }) => {
+      // NOTE: For the scorer themselves, optimistic UI already updated it. 
+      // In a real app, we check if the update came from US or from another device. 
+      // We can just refetch data on pusher event to keep perfectly in sync.
+      refetch();
+    });
+
+    return () => {
+      pusherClient.unsubscribe(channelName);
+    };
+  }, [params.matchId, refetch]);
 
   const vibrate = (pattern: number | number[]) => {
     if (typeof window !== "undefined" && navigator.vibrate) navigator.vibrate(pattern);
@@ -90,15 +121,19 @@ export default function MatchScoringPage({ params }: { params: { matchId: string
     setTimeout(() => setToast(null), 2500);
   };
 
-  const recordBall = useCallback((display: string, runsAdded: number, isWicket = false, isExtra = false) => {
+  const recordBallMutation = trpc.match.recordBall.useMutation();
+
+  const recordBall = useCallback((display: string, runsAdded: number, isWicket = false, isExtra = false, dismissalType?: string) => {
     vibrate(isWicket ? [100, 50, 100] : 40);
+    
+    // Optimistic UI update
     setCurrentOver(prev => {
       const next = [...prev, display];
-      // Start new over after 6 legal balls
       const legalBalls = next.filter(b => b !== "wd" && b !== "nb").length;
       if (legalBalls >= 6) return [];
       return next;
     });
+    
     if (!isExtra) {
       setTotalScore(prev => ({
         runs: prev.runs + runsAdded,
@@ -108,7 +143,24 @@ export default function MatchScoringPage({ params }: { params: { matchId: string
     } else {
       setTotalScore(prev => ({ ...prev, runs: prev.runs + runsAdded }));
     }
-  }, []);
+
+    // Save to Database
+    if (match?.inningsId) {
+      recordBallMutation.mutate({
+        matchId: params.matchId,
+        inningsId: match.inningsId,
+        runs: runsAdded,
+        isWicket,
+        isWide: display === "wd",
+        isNoBall: display === "nb",
+        isLegBye: display === "lb",
+        isBye: display === "by",
+        dismissalType,
+        batsmanId: match.striker.id,
+        bowlerId: match.bowler.id,
+      });
+    }
+  }, [match, params.matchId]);
 
   const handleUndo = () => {
     if (currentOver.length === 0 && totalScore.balls === 0) return;

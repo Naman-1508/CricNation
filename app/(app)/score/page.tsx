@@ -153,7 +153,15 @@ function SetupMatchInner() {
   const handleCreate = () => {
     if (!homeTeam || !awayTeam || !tossWinner || !tossDecision) return;
     setIsCreating(true);
-    createMatch.mutate({ teamA: homeTeam.name, teamB: awayTeam.name, overs: matchType === "UNLIMITED" ? 0 : overs, ballType, location: venue });
+    createMatch.mutate({
+      homeTeamId: homeTeam.id,
+      awayTeamId: awayTeam.id,
+      tossWinnerId: tossWinner === "home" ? homeTeam.id : awayTeam.id,
+      tossDecision,
+      overs: matchType === "UNLIMITED" ? 0 : overs,
+      ballType,
+      location: venue
+    });
   };
 
   return (
