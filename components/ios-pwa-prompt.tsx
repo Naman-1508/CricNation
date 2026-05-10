@@ -15,14 +15,11 @@ export default function IosPwaPrompt() {
     // @ts-ignore
     const isStandalone = window.navigator.standalone || window.matchMedia("(display-mode: standalone)").matches;
 
-    // Show prompt if iOS and not installed, and hasn't been dismissed recently
+    // Show prompt if iOS and not installed
     if (isIos && !isStandalone) {
-      const hasDismissed = localStorage.getItem("iosPwaPromptDismissed");
-      if (!hasDismissed) {
-        // Delay prompt slightly so it's not jarring on initial load
-        const timer = setTimeout(() => setShowPrompt(true), 3000);
-        return () => clearTimeout(timer);
-      }
+      // Force showing it for debugging purposes (ignoring dismissal)
+      const timer = setTimeout(() => setShowPrompt(true), 3000);
+      return () => clearTimeout(timer);
     }
   }, []);
 
