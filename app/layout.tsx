@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import TRPCProvider from "@/app/_trpc/Provider";
+import AuthProvider from "@/components/session-provider";
 
 const jakarta = Plus_Jakarta_Sans({ 
   subsets: ["latin"],
@@ -52,16 +53,18 @@ export default function RootLayout({
       <body
         className={`${jakarta.variable} ${inter.variable} font-sans antialiased bg-background text-foreground overscroll-none`}
       >
-        <TRPCProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
-        </TRPCProvider>
+        <AuthProvider>
+          <TRPCProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              enableSystem
+              disableTransitionOnChange
+            >
+              {children}
+            </ThemeProvider>
+          </TRPCProvider>
+        </AuthProvider>
       </body>
     </html>
   );
