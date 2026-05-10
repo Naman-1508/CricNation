@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import TRPCProvider from "@/app/_trpc/Provider";
 import AuthProvider from "@/components/session-provider";
+import IosPwaPrompt from "@/components/ios-pwa-prompt";
 
 const jakarta = Plus_Jakarta_Sans({ 
   subsets: ["latin"],
@@ -62,6 +63,7 @@ export default function RootLayout({
               disableTransitionOnChange
             >
               {children}
+              <IosPwaPrompt />
             </ThemeProvider>
           </TRPCProvider>
         </AuthProvider>

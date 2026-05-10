@@ -16,8 +16,11 @@ function TeamColorBadge({ color, shortName }: { color: string; shortName: string
   );
 }
 
+import { useSession } from "next-auth/react";
+
 export default function TeamsPage() {
-  const { data: teams, isLoading } = trpc.team.getMyTeams.useQuery();
+  const { data: session } = useSession();
+  const { data: teams, isLoading } = trpc.team.getMyTeams.useQuery(undefined, { enabled: !!session?.user });
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] pb-28">

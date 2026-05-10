@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ChevronRight, Search, Plus, X, Check } from "lucide-react";
 import { trpc } from "@/app/_trpc/client";
+import { useSession } from "next-auth/react";
 
 // ─── Overs Selector ───────────────────────────────────────────
 function OversSelector({ value, onChange }: { value: number; onChange: (v: number) => void }) {
@@ -55,7 +56,8 @@ function TeamPicker({ label, value, onSelect }: {
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const { data: myTeams } = trpc.team.getMyTeams.useQuery();
+  const { data: session } = useSession();
+  const { data: myTeams } = trpc.team.getMyTeams.useQuery(undefined, { enabled: !!session?.user });
   const { data: searchResults } = trpc.team.search.useQuery({ query }, { enabled: query.length > 1 });
   const teams = query.length > 1 ? searchResults : myTeams;
 

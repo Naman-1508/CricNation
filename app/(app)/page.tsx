@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 export default function HomePage() {
   const { data: session } = useSession();
   const { data: tournaments, isLoading: loadingT } = trpc.tournament.getAll.useQuery();
-  const { data: myTeams } = trpc.team.getMyTeams.useQuery();
+  const { data: myTeams } = trpc.team.getMyTeams.useQuery(undefined, { enabled: !!session?.user });
   const [greeting, setGreeting] = useState("Hey there");
   const [location, setLocation] = useState<string | null>(null);
 
