@@ -19,8 +19,25 @@ function TeamColorBadge({ color, shortName }: { color: string; shortName: string
 import { useSession } from "next-auth/react";
 
 export default function TeamsPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { data: teams, isLoading } = trpc.team.getMyTeams.useQuery(undefined, { enabled: !!session?.user });
+
+  if (status === "unauthenticated") {
+    return (
+      <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
+          <Users className="w-8 h-8" />
+        </div>
+        <h2 className="text-xl font-bold text-[#1A1A1A] mb-2">Login Required</h2>
+        <p className="text-[#8A8278] text-sm mb-6">Create an account or login to manage your teams and add players.</p>
+        <Link href="/login">
+          <button className="bg-[#E8390E] text-white font-semibold px-8 py-3.5 rounded-xl shadow-[0_4px_16px_rgba(232,57,14,0.35)]">
+            Login / Register
+          </button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] pb-28">

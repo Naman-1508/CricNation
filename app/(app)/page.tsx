@@ -8,7 +8,7 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
 export default function HomePage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { data: tournaments, isLoading: loadingT } = trpc.tournament.getAll.useQuery();
   const { data: myTeams } = trpc.team.getMyTeams.useQuery(undefined, { enabled: !!session?.user });
   const [greeting, setGreeting] = useState("Hey there");
@@ -90,29 +90,44 @@ export default function HomePage() {
           </motion.div>
         </Link>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-3">
-          <Link href="/teams/new">
-            <motion.div whileTap={{ scale: 0.97 }}
-              className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 hover:border-[rgba(107,74,42,0.25)] transition-colors">
-              <div className="w-10 h-10 bg-blue-50 rounded-2xl flex items-center justify-center mb-3">
-                <Users className="w-5 h-5 text-blue-600" />
-              </div>
-              <p className="font-semibold text-sm text-[#1A1A1A]">Create Team</p>
-              <p className="text-xs text-[#8A8278] mt-0.5">Build your squad</p>
-            </motion.div>
-          </Link>
-          <Link href="/tournaments/new">
-            <motion.div whileTap={{ scale: 0.97 }}
-              className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 hover:border-[rgba(107,74,42,0.25)] transition-colors">
-              <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center mb-3">
-                <Trophy className="w-5 h-5 text-amber-600" />
-              </div>
-              <p className="font-semibold text-sm text-[#1A1A1A]">Host Tournament</p>
-              <p className="text-xs text-[#8A8278] mt-0.5">Free · Auto-fixtures</p>
-            </motion.div>
-          </Link>
-        </div>
+        {/* Quick Actions / Auth Prompt */}
+        {status === "unauthenticated" ? (
+          <div className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-5 text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4" />
+            <div className="relative z-10">
+              <h2 className="font-bold text-[#1A1A1A] mb-1">Get the full experience</h2>
+              <p className="text-xs text-[#8A8278] mb-4">Log in to create teams, save your stats, and host tournaments.</p>
+              <Link href="/login">
+                <motion.button whileTap={{ scale: 0.97 }} className="w-full bg-[#1A1A1A] text-white font-semibold py-3 rounded-xl text-sm shadow-[0_4px_12px_rgba(26,26,26,0.2)]">
+                  Sign In / Register
+                </motion.button>
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            <Link href="/teams/new">
+              <motion.div whileTap={{ scale: 0.97 }}
+                className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 hover:border-[rgba(107,74,42,0.25)] transition-colors">
+                <div className="w-10 h-10 bg-blue-50 rounded-2xl flex items-center justify-center mb-3">
+                  <Users className="w-5 h-5 text-blue-600" />
+                </div>
+                <p className="font-semibold text-sm text-[#1A1A1A]">Create Team</p>
+                <p className="text-xs text-[#8A8278] mt-0.5">Build your squad</p>
+              </motion.div>
+            </Link>
+            <Link href="/tournaments/new">
+              <motion.div whileTap={{ scale: 0.97 }}
+                className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 hover:border-[rgba(107,74,42,0.25)] transition-colors">
+                <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center mb-3">
+                  <Trophy className="w-5 h-5 text-amber-600" />
+                </div>
+                <p className="font-semibold text-sm text-[#1A1A1A]">Host Tournament</p>
+                <p className="text-xs text-[#8A8278] mt-0.5">Free · Auto-fixtures</p>
+              </motion.div>
+            </Link>
+          </div>
+        )}
 
         {/* My Teams */}
         {myTeams && myTeams.length > 0 && (

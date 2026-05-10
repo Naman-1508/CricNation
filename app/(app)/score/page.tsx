@@ -120,7 +120,13 @@ function TeamPicker({ label, value, onSelect }: {
 function SetupMatchInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session, status } = useSession();
   const [step, setStep] = useState<1 | 2 | 3>(1);
+
+  if (status === "unauthenticated") {
+    if (typeof window !== "undefined") router.push("/login");
+    return null;
+  }
   const [homeTeam, setHomeTeam] = useState<TeamRef | null>(null);
   const [awayTeam, setAwayTeam] = useState<TeamRef | null>(null);
   const [overs, setOvers] = useState(20);

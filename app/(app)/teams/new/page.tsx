@@ -22,8 +22,13 @@ type AddedPlayer = {
 
 export default function CreateTeamPage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [step, setStep] = useState<1 | 2>(1);
+
+  if (status === "unauthenticated") {
+    if (typeof window !== "undefined") router.push("/login");
+    return null;
+  }
 
   // Step 1 state
   const [teamName, setTeamName] = useState("");
