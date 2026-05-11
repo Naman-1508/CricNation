@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Edit2, MapPin, Star, Award,
-  ChevronRight, Trophy, Target, Zap, Check, X, Users
+  ChevronRight, Trophy, Target, Zap, Check, Shield, Users
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { trpc } from "@/app/_trpc/client";
@@ -19,33 +19,35 @@ function getInitialsColor(name: string) {
   return colors[Math.abs(hash) % colors.length];
 }
 
-function StatBox({ label, value }: { label: string; value: string | number }) {
+function StatBox({ label, value, highlight }: { label: string; value: string | number; highlight?: boolean }) {
+  const empty = value === 0 || value === null || value === undefined || value === "—" || value === "0/0";
   return (
-    <div className="bg-[#F2EFE9] rounded-xl p-3 text-center">
-      <p className="text-lg font-bold text-[#1A1A1A]">{value === 0 || value === null ? "—" : value}</p>
-      <p className="text-[10px] text-[#8A8278] uppercase tracking-wide mt-0.5 font-medium">{label}</p>
+    <div className={`rounded-xl p-3 text-center ${highlight ? "bg-[#E8390E]/8 border border-[#E8390E]/20" : "bg-[#F2EFE9]"}`}>
+      <p className={`text-lg font-bold ${highlight ? "text-[#E8390E]" : "text-[#1A1A1A]"}`}>
+        {empty ? "—" : value}
+      </p>
+      <p className="text-[10px] text-[#8A8278] uppercase tracking-wide mt-0.5 font-medium leading-tight">{label}</p>
     </div>
   );
 }
 
-// ── Edit Profile Sheet ────────────────────────────────────────────────────────
-function EditProfileSheet({
-  isOpen,
-  currentName,
-  currentCity,
-  onClose,
-  onSave,
-  isSaving,
-}: {
-  isOpen: boolean;
-  currentName: string;
-  currentCity: string;
-  onClose: () => void;
-  onSave: (name: string, city: string) => void;
-  isSaving: boolean;
+function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      {icon}
+      <h2 className="font-bold text-sm text-[#1A1A1A]">{title}</h2>
+    </div>
+  );
+}
+
+// ── Edit Profile Sheet ──────────────────────────────────────────
+function EditProfileSheet({ isOpen, currentName, currentCity, onClose, onSave, isSaving }: {
+  isOpen: boolean; currentName: string; currentCity: string;
+  onClose: () => void; onSave: (name: string, city: string) => void; isSaving: boolean;
 }) {
   const [name, setName] = useState(currentName);
   const [city, setCity] = useState(currentCity);
+  const ic = "w-full bg-[#F2EFE9] border border-[rgba(107,74,42,0.13)] rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-[#E8390E] transition-colors";
 
   return (
     <AnimatePresence>
@@ -58,41 +60,21 @@ function EditProfileSheet({
             className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 p-6 pb-10 shadow-2xl">
             <div className="w-10 h-1 bg-[rgba(107,74,42,0.2)] rounded-full mx-auto mb-6" />
             <h3 className="font-bold text-[#1A1A1A] text-lg mb-5">Edit Profile</h3>
-
             <div className="space-y-4">
               <div>
                 <label className="text-xs text-[#8A8278] font-medium block mb-1.5">Display Name</label>
-                <input
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  className="w-full bg-[#F2EFE9] border border-[rgba(107,74,42,0.13)] rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-[#E8390E] transition-colors"
-                  placeholder="Your name"
-                  maxLength={60}
-                />
+                <input value={name} onChange={e => setName(e.target.value)} className={ic} placeholder="Your name" maxLength={60} />
               </div>
               <div>
                 <label className="text-xs text-[#8A8278] font-medium block mb-1.5">City</label>
-                <input
-                  value={city}
-                  onChange={e => setCity(e.target.value)}
-                  className="w-full bg-[#F2EFE9] border border-[rgba(107,74,42,0.13)] rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-[#E8390E] transition-colors"
-                  placeholder="e.g. Mumbai, Nagpur..."
-                  maxLength={50}
-                />
+                <input value={city} onChange={e => setCity(e.target.value)} className={ic} placeholder="e.g. Mumbai, Nagpur..." maxLength={50} />
               </div>
             </div>
-
             <div className="grid grid-cols-2 gap-3 mt-6">
-              <button onClick={onClose}
-                className="py-3.5 rounded-xl bg-[#F2EFE9] text-[#4A4540] font-semibold text-sm">
-                Cancel
-              </button>
-              <button
-                onClick={() => onSave(name, city)}
-                disabled={isSaving || !name.trim()}
-                className="py-3.5 rounded-xl bg-[#E8390E] text-white font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(232,57,14,0.3)]"
-              >
-                {isSaving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Check className="w-4 h-4" /> Save</>}
+              <button onClick={onClose} className="py-3.5 rounded-xl bg-[#F2EFE9] text-[#4A4540] font-semibold text-sm">Cancel</button>
+              <button onClick={() => onSave(name, city)} disabled={isSaving || !name.trim()}
+                className="py-3.5 rounded-xl bg-[#E8390E] text-white font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(232,57,14,0.3)]">
+                {isSaving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Check className="w-4 h-4" />Save</>}
               </button>
             </div>
           </motion.div>
@@ -102,7 +84,7 @@ function EditProfileSheet({
   );
 }
 
-// ── Main Page ────────────────────────────────────────────────────────────────
+// ── Main Page ───────────────────────────────────────────────────
 export default function ProfilePage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { data: session, status, update: updateSession } = useSession();
@@ -120,24 +102,15 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
   const updateProfile = trpc.user.updateProfile.useMutation({
     onSuccess: async () => {
       await utils.player.getProfile.invalidate({ userId: userId! });
-      await updateSession(); // refresh next-auth session
+      await updateSession();
       setShowEdit(false);
     },
   });
 
-  // ── Loading ──────────────────────────────────────────────────────────────
   if (params.id === "me" && status === "loading") {
-    return (
-      <div className="min-h-screen bg-[#FAFAF8] pb-28">
-        <div className="h-48 bg-[#1A1A1A] animate-pulse" />
-        <div className="px-4 pt-4 space-y-3">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-[#F2EFE9] rounded-2xl animate-pulse" />)}
-        </div>
-      </div>
-    );
+    return <LoadingShell />;
   }
 
-  // ── Unauthenticated "me" ─────────────────────────────────────────────────
   if (params.id === "me" && status === "unauthenticated") {
     return (
       <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center p-8 text-center">
@@ -154,56 +127,43 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
     );
   }
 
-  if (isLoading || !profile) {
-    return (
-      <div className="min-h-screen bg-[#FAFAF8] pb-28">
-        <div className="h-48 bg-[#1A1A1A] animate-pulse" />
-        <div className="px-4 pt-4 space-y-3">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-[#F2EFE9] rounded-2xl animate-pulse" />)}
-        </div>
-      </div>
-    );
-  }
+  if (isLoading || !profile) return <LoadingShell />;
 
-  const { user, teams, batting, bowling, recentMatches, awards } = profile;
+  const { user, teams, batting, bowling, fielding, recentMatches, awards } = profile;
   const name = user.name ?? "Cricket Player";
   const initials = name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
   const bgColor = getInitialsColor(name);
   const captainTeam = teams.find((t: any) => t.role === "CAPTAIN");
   const joinedDate = new Date(user.createdAt).toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+  const hasBatting = batting.innings > 0;
+  const hasBowling = bowling.wickets > 0 || bowling.legalBalls > 0;
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] pb-28">
-      {/* ── Hero Banner ── */}
+      {/* Hero */}
       <div className="bg-[#1A1A1A] pt-12 pb-8 px-4 relative overflow-hidden">
-        {/* BG accent blob */}
-        <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-20"
+        <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-20 pointer-events-none"
           style={{ backgroundColor: bgColor, transform: "translate(40%,-40%)", filter: "blur(40px)" }} />
 
-        {/* Back + Edit */}
         <div className="flex justify-between items-center mb-6 relative z-10">
           <motion.button whileTap={{ scale: 0.9 }} onClick={() => router.back()}
-            className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white backdrop-blur-sm">
+            className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white">
             <ArrowLeft className="w-5 h-5" />
           </motion.button>
           {isOwnProfile && (
             <button onClick={() => setShowEdit(true)}
-              className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white backdrop-blur-sm">
+              className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white">
               <Edit2 className="w-4 h-4" />
             </button>
           )}
         </div>
 
-        {/* Avatar + Info */}
         <div className="flex items-end gap-4 relative z-10">
-          {/* Avatar: use Google photo if own profile, otherwise initials */}
-          <div className="shrink-0 relative">
+          <div className="shrink-0">
             {(isOwnProfile && session?.user?.image) || user.image ? (
               <Image
                 src={(isOwnProfile ? session?.user?.image : user.image) ?? ""}
-                alt={name}
-                width={80}
-                height={80}
+                alt={name} width={80} height={80}
                 className="w-20 h-20 rounded-2xl object-cover ring-4 ring-white/20"
               />
             ) : (
@@ -213,7 +173,6 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
               </div>
             )}
           </div>
-
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-black text-white truncate">{name}</h1>
             {captainTeam && (
@@ -229,27 +188,22 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        {/* Quick stats bar */}
+        {/* Quick stat row */}
         <div className="flex items-center gap-5 mt-5 relative z-10 border-t border-white/10 pt-4">
-          <div className="text-center">
-            <p className="text-white font-bold text-base">{batting.matches || "—"}</p>
-            <p className="text-white/40 text-[10px] uppercase tracking-wide">Matches</p>
-          </div>
-          <div className="w-px h-8 bg-white/10" />
-          <div className="text-center">
-            <p className="text-white font-bold text-base">{batting.runs || "—"}</p>
-            <p className="text-white/40 text-[10px] uppercase tracking-wide">Runs</p>
-          </div>
-          <div className="w-px h-8 bg-white/10" />
-          <div className="text-center">
-            <p className="text-white font-bold text-base">{bowling.wickets || "—"}</p>
-            <p className="text-white/40 text-[10px] uppercase tracking-wide">Wickets</p>
-          </div>
-          <div className="w-px h-8 bg-white/10" />
-          <div className="text-center">
-            <p className="text-white font-bold text-base">{teams.length || "—"}</p>
-            <p className="text-white/40 text-[10px] uppercase tracking-wide">Teams</p>
-          </div>
+          {[
+            { label: "Matches", val: batting.matches || "—" },
+            { label: "Runs", val: batting.runs || "—" },
+            { label: "Wickets", val: bowling.wickets || "—" },
+            { label: "Teams", val: teams.length || "—" },
+          ].map((s, i) => (
+            <div key={i} className="flex items-center gap-5">
+              {i > 0 && <div className="w-px h-8 bg-white/10" />}
+              <div className="text-center">
+                <p className="text-white font-bold text-base">{s.val}</p>
+                <p className="text-white/40 text-[10px] uppercase tracking-wide">{s.label}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -258,19 +212,13 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
         {/* ── Teams ── */}
         {teams.length > 0 && (
           <section>
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="font-semibold text-sm text-[#1A1A1A] flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-[#8A8278]" /> Teams
-              </h2>
-            </div>
+            <SectionHeader icon={<Users className="w-4 h-4 text-[#8A8278]" />} title="Teams" />
             <div className="flex gap-2.5 overflow-x-auto hide-scrollbar -mx-4 px-4 pb-1">
               {teams.map((tm: any) => (
                 <Link key={tm.id} href={`/teams/${tm.team.id}`} className="shrink-0">
-                  <div className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-3 flex items-center gap-2.5 min-w-[160px] shadow-sm hover:border-[rgba(107,74,42,0.25)] transition-colors">
+                  <div className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-3 flex items-center gap-2.5 min-w-[160px] shadow-sm">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white text-xs shrink-0"
-                      style={{ backgroundColor: tm.team.colorHex }}>
-                      {tm.team.shortName}
-                    </div>
+                      style={{ backgroundColor: tm.team.colorHex }}>{tm.team.shortName}</div>
                     <div className="min-w-0">
                       <p className="font-semibold text-xs text-[#1A1A1A] truncate">{tm.team.name}</p>
                       <p className="text-[10px] text-[#8A8278] capitalize">{tm.role.toLowerCase().replace("_", " ")}</p>
@@ -284,26 +232,31 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
 
         {/* ── Batting Stats ── */}
         <section className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 shadow-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <Target className="w-4 h-4 text-[#E8390E]" />
-            <h2 className="font-semibold text-sm text-[#1A1A1A]">Batting</h2>
-          </div>
-          {batting.matches === 0 ? (
+          <SectionHeader icon={<Target className="w-4 h-4 text-[#E8390E]" />} title="Batting" />
+          {!hasBatting ? (
             <div className="py-6 text-center">
               <p className="text-2xl mb-2">🏏</p>
               <p className="text-sm text-[#8A8278]">No batting stats yet — score a match!</p>
             </div>
           ) : (
             <div className="space-y-2">
-              <div className="grid grid-cols-3 gap-2">
-                <StatBox label="Matches" value={batting.matches} />
-                <StatBox label="Runs" value={batting.runs} />
-                <StatBox label="Avg" value={batting.average > 0 ? batting.average : "—"} />
+              <div className="grid grid-cols-4 gap-2">
+                <StatBox label="Mat" value={batting.matches} />
+                <StatBox label="Inn" value={batting.innings} />
+                <StatBox label="Runs" value={batting.runs} highlight />
+                <StatBox label="HS" value={batting.highestScore} />
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                <StatBox label="SR" value={batting.strikeRate > 0 ? `${batting.strikeRate}` : "—"} />
+              <div className="grid grid-cols-4 gap-2">
+                <StatBox label="Avg" value={batting.average > 0 ? batting.average : "—"} />
+                <StatBox label="SR" value={batting.strikeRate > 0 ? batting.strikeRate : "—"} />
+                <StatBox label="100s" value={batting.hundreds} />
+                <StatBox label="50s" value={batting.fifties} />
+              </div>
+              <div className="grid grid-cols-4 gap-2">
                 <StatBox label="4s" value={batting.fours} />
                 <StatBox label="6s" value={batting.sixes} />
+                <StatBox label="Balls" value={batting.balls} />
+                <StatBox label="Catches" value={fielding?.catches ?? 0} />
               </div>
             </div>
           )}
@@ -311,20 +264,27 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
 
         {/* ── Bowling Stats ── */}
         <section className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 shadow-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <Zap className="w-4 h-4 text-amber-500" />
-            <h2 className="font-semibold text-sm text-[#1A1A1A]">Bowling</h2>
-          </div>
-          {bowling.wickets === 0 ? (
+          <SectionHeader icon={<Zap className="w-4 h-4 text-amber-500" />} title="Bowling" />
+          {!hasBowling ? (
             <div className="py-6 text-center">
               <p className="text-2xl mb-2">🎳</p>
               <p className="text-sm text-[#8A8278]">No bowling stats yet</p>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2">
-              <StatBox label="Wickets" value={bowling.wickets} />
-              <StatBox label="Economy" value={bowling.economy > 0 ? `${bowling.economy}` : "—"} />
-              <StatBox label="Avg" value={bowling.average ?? "—"} />
+            <div className="space-y-2">
+              <div className="grid grid-cols-4 gap-2">
+                <StatBox label="Overs" value={bowling.overs} />
+                <StatBox label="Runs" value={bowling.runsConceded} />
+                <StatBox label="Wkts" value={bowling.wickets} highlight />
+                <StatBox label="Best" value={bowling.bestBowling ?? "—"} />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <StatBox label="Economy" value={bowling.economy > 0 ? bowling.economy : "—"} />
+                <StatBox label="Avg" value={bowling.average ?? "—"} />
+                <StatBox label="SR" value={
+                  bowling.wickets > 0 ? +((bowling.legalBalls / bowling.wickets).toFixed(1)) : "—"
+                } />
+              </div>
             </div>
           )}
         </section>
@@ -332,10 +292,7 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
         {/* ── Achievements ── */}
         {awards && awards.length > 0 && (
           <section className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 shadow-sm">
-            <div className="flex items-center gap-2 mb-3">
-              <Award className="w-4 h-4 text-amber-500" />
-              <h2 className="font-semibold text-sm text-[#1A1A1A]">Achievements</h2>
-            </div>
+            <SectionHeader icon={<Award className="w-4 h-4 text-amber-500" />} title="Achievements" />
             <div className="grid grid-cols-2 gap-2">
               {awards.map((a: any) => (
                 <div key={a.id} className="bg-amber-50 border border-amber-100 rounded-xl p-3">
@@ -350,7 +307,9 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
         {/* ── Recent Matches ── */}
         {recentMatches && recentMatches.length > 0 && (
           <section>
-            <h2 className="font-semibold text-sm text-[#1A1A1A] mb-2">Recent Matches</h2>
+            <h2 className="font-bold text-sm text-[#1A1A1A] mb-2 flex items-center gap-1.5">
+              <Trophy className="w-4 h-4 text-[#8A8278]" /> Recent Matches
+            </h2>
             <div className="space-y-2">
               {recentMatches.map((m: any, i: number) => (
                 <Link key={i} href={`/match/${m.matchId}`}>
@@ -380,7 +339,7 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
           </section>
         )}
 
-        {/* ── Empty state (no matches at all) ── */}
+        {/* ── Empty state ── */}
         {batting.matches === 0 && bowling.wickets === 0 && (!recentMatches || recentMatches.length === 0) && teams.length === 0 && (
           <div className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-8 text-center shadow-sm">
             <div className="text-5xl mb-4">🏏</div>
@@ -395,7 +354,6 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
         )}
       </div>
 
-      {/* ── Edit Sheet ── */}
       <EditProfileSheet
         isOpen={showEdit}
         currentName={user.name ?? ""}
@@ -404,6 +362,17 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
         onSave={(name, city) => updateProfile.mutate({ name, city })}
         isSaving={updateProfile.isPending}
       />
+    </div>
+  );
+}
+
+function LoadingShell() {
+  return (
+    <div className="min-h-screen bg-[#FAFAF8] pb-28">
+      <div className="h-52 bg-[#1A1A1A] animate-pulse" />
+      <div className="px-4 pt-4 space-y-3">
+        {[...Array(4)].map((_, i) => <div key={i} className="h-28 bg-[#F2EFE9] rounded-2xl animate-pulse" />)}
+      </div>
     </div>
   );
 }

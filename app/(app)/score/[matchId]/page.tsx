@@ -76,24 +76,25 @@ function UndoSheet({ isOpen, lastBall, onClose, onConfirm }: {
 // ─── Main Scoring Page ──────────────────────────────────────────
 export default function MatchScoringPage({ params }: { params: { matchId: string } }) {
   const { data: match, isLoading, refetch } = trpc.match.getById.useQuery({ id: params.matchId });
-  const [currentOver, setCurrentOver] = useState<string[]>([]);
-  const [totalScore, setTotalScore] = useState({ runs: 0, wickets: 0, balls: 0 });
   const [isWicketOpen, setIsWicketOpen] = useState(false);
   const [isUndoOpen, setIsUndoOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [target] = useState<number | null>(null);
 
-  // Sync state with backend data on load
+  // Derive all state from server — optimistic overlay for responsiveness
+  const [optimisticOver, setOptimisticOver] = useState<string[] | null>(null);
+  const [optimisticScore, setOptimisticScore] = useState<{ runs: number; wickets: number; balls: number } | null>(null);
+
+  const currentOver = optimisticOver ?? match?.currentOver ?? [];
+  const totalScore = optimisticScore ?? match?.score ?? { runs: 0, wickets: 0, balls: 0 };
+  const target = null;
+
+  // When server data updates, clear optimistic state so server truth wins
   useEffect(() => {
     if (match) {
-      setCurrentOver(match.currentOver || []);
-      setTotalScore({
-        runs: match.score.runs,
-        wickets: match.score.wickets,
-        balls: match.score.balls
-      });
+      setOptimisticOver(null);
+      setOptimisticScore(null);
     }
-  }, [match]);
+  }, [match?.score.balls]);
 
   // Subscribe to Pusher for real-time spectator updates
   useEffect(() => {
@@ -121,30 +122,37 @@ export default function MatchScoringPage({ params }: { params: { matchId: string
     setTimeout(() => setToast(null), 2500);
   };
 
-  const recordBallMutation = trpc.match.recordBall.useMutation();
+  const recordBallMutation = trpc.match.recordBall.useMutation({
+    onSuccess: () => refetch(),
+  });
+  const undoMutation = trpc.match.undoLastBall.useMutation({
+    onSuccess: () => { refetch(); showToast("Last ball removed"); },
+  });
 
   const recordBall = useCallback((display: string, runsAdded: number, isWicket = false, isExtra = false, dismissalType?: string) => {
     vibrate(isWicket ? [100, 50, 100] : 40);
-    
-    // Optimistic UI update
-    setCurrentOver(prev => {
-      const next = [...prev, display];
-      const legalBalls = next.filter(b => b !== "wd" && b !== "nb").length;
-      if (legalBalls >= 6) return [];
-      return next;
-    });
-    
-    if (!isExtra) {
-      setTotalScore(prev => ({
-        runs: prev.runs + runsAdded,
-        wickets: prev.wickets + (isWicket ? 1 : 0),
-        balls: prev.balls + (isExtra ? 0 : 1),
-      }));
-    } else {
-      setTotalScore(prev => ({ ...prev, runs: prev.runs + runsAdded }));
-    }
 
-    // Save to Database
+    // Optimistic UI: update over display immediately
+    setOptimisticOver(prev => {
+      const base = prev ?? (match?.currentOver ?? []);
+      const next = [...base, display];
+      const legalBalls = next.filter(b => b !== "wd" && b !== "nb").length;
+      return legalBalls >= 6 ? [] : next;
+    });
+
+    // Optimistic score
+    const baseScore = match?.score ?? { runs: 0, wickets: 0, balls: 0 };
+    setOptimisticScore(prev => {
+      const cur = prev ?? baseScore;
+      if (isExtra) return { ...cur, runs: cur.runs + runsAdded };
+      return {
+        runs: cur.runs + runsAdded,
+        wickets: cur.wickets + (isWicket ? 1 : 0),
+        balls: cur.balls + 1,
+      };
+    });
+
+    // Persist to DB
     if (match?.inningsId) {
       recordBallMutation.mutate({
         matchId: params.matchId,
@@ -168,17 +176,10 @@ export default function MatchScoringPage({ params }: { params: { matchId: string
   };
 
   const confirmUndo = () => {
-    const last = currentOver[currentOver.length - 1];
-    setCurrentOver(prev => prev.slice(0, -1));
-    // Revert score estimate
-    if (last === "W") setTotalScore(prev => ({ ...prev, wickets: Math.max(0, prev.wickets - 1), balls: Math.max(0, prev.balls - 1) }));
-    else if (last === "wd" || last === "nb") setTotalScore(prev => ({ ...prev, runs: Math.max(0, prev.runs - 1) }));
-    else {
-      const runs = parseInt(last) || 0;
-      setTotalScore(prev => ({ runs: Math.max(0, prev.runs - runs), wickets: prev.wickets, balls: Math.max(0, prev.balls - 1) }));
-    }
     setIsUndoOpen(false);
-    showToast("Last ball removed");
+    if (match?.inningsId) {
+      undoMutation.mutate({ inningsId: match.inningsId, matchId: params.matchId });
+    }
   };
 
   const overs = Math.floor(totalScore.balls / 6);
@@ -260,7 +261,7 @@ export default function MatchScoringPage({ params }: { params: { matchId: string
             <span className="text-[10px] text-[#E8390E] font-bold bg-[#E8390E]/10 px-1.5 py-0.5 rounded">ON STRIKE</span>
           </div>
           <span className="font-mono font-bold text-[#1A1A1A]">
-            {match.striker.runs} <span className="text-[#8A8278] text-xs font-normal">({match.striker.balls})</span>
+            {match.striker.runs}<span className="text-[#8A8278] text-xs font-normal"> ({match.striker.balls}b)</span>
           </span>
         </div>
         <div className="flex justify-between items-center px-3 py-2">
@@ -268,7 +269,7 @@ export default function MatchScoringPage({ params }: { params: { matchId: string
             <span className="text-[#8A8278] font-medium text-sm">{match.nonStriker.name}</span>
           </div>
           <span className="font-mono text-[#8A8278] text-sm">
-            {match.nonStriker.runs} <span className="text-[#8A8278]/60 text-xs">({match.nonStriker.balls})</span>
+            {match.nonStriker.runs}<span className="text-[#8A8278]/60 text-xs"> ({match.nonStriker.balls}b)</span>
           </span>
         </div>
         <div className="flex justify-between items-center border-t border-[rgba(107,74,42,0.08)] pt-2 px-3">
@@ -277,7 +278,7 @@ export default function MatchScoringPage({ params }: { params: { matchId: string
             <span className="text-[#4A4540] font-medium text-sm">{match.bowler.name}</span>
           </div>
           <span className="font-mono text-sm text-[#4A4540]">
-            {match.bowler.wickets}/{match.bowler.runs} <span className="text-[#8A8278] text-xs">({match.bowler.overs})</span>
+            {match.bowler.wickets}/{match.bowler.runs} <span className="text-[#8A8278] text-xs">({match.bowler.overs} ov)</span>
           </span>
         </div>
       </div>

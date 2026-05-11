@@ -36,7 +36,7 @@ export const playerRouter = router({
       });
       if (!user) throw new TRPCError({ code: 'NOT_FOUND' });
 
-      // Batting: aggregate from BallByBall where batsmanId matches a MatchPlayer linked to this user
+      // ── Batting balls ────────────────────────────────────────────────
       const battingBalls = await ctx.prisma.ballByBall.findMany({
         where: {
           batsman: { userId: input.userId },
@@ -53,13 +53,26 @@ export const playerRouter = router({
       const fours = battingBalls.filter(b => b.runs === 4).length;
       const sixes = battingBalls.filter(b => b.runs === 6).length;
       const strikeRate = totalBalls > 0 ? +((totalRuns / totalBalls) * 100).toFixed(1) : 0;
-      const average = dismissals > 0 ? +(totalRuns / dismissals).toFixed(1) : totalRuns > 0 ? totalRuns : 0;
+      const average = dismissals > 0 ? +(totalRuns / dismissals).toFixed(2) : totalRuns > 0 ? totalRuns : 0;
 
-      // Unique innings
-      const inningsSet = new Set(battingBalls.map(b => b.inningsId));
-      const uniqueInnings = inningsSet.size;
+      // Unique innings played
+      const inningsMap = new Map<string, { runs: number; isOut: boolean }>();
+      for (const b of battingBalls) {
+        const prev = inningsMap.get(b.inningsId) ?? { runs: 0, isOut: false };
+        inningsMap.set(b.inningsId, {
+          runs: prev.runs + b.runs,
+          isOut: prev.isOut || b.isWicket,
+        });
+      }
+      const uniqueInnings = inningsMap.size;
 
-      // Bowling
+      // Highest score, 50s, 100s
+      const inningsScores = Array.from(inningsMap.values()).map(i => i.runs);
+      const highestScore = inningsScores.length > 0 ? Math.max(...inningsScores) : 0;
+      const fifties = inningsScores.filter(r => r >= 50 && r < 100).length;
+      const hundreds = inningsScores.filter(r => r >= 100).length;
+
+      // ── Bowling balls ────────────────────────────────────────────────
       const bowlingBalls = await ctx.prisma.ballByBall.findMany({
         where: {
           bowler: { userId: input.userId },
@@ -67,16 +80,62 @@ export const playerRouter = router({
           isWide: false,
           isNoBall: false,
         },
-        select: { runs: true, isWicket: true, dismissalType: true },
+        select: { runs: true, isWicket: true, dismissalType: true, inningsId: true },
       });
 
       const wickets = bowlingBalls.filter(b => b.isWicket && b.dismissalType !== 'RUN_OUT').length;
       const runsConceded = bowlingBalls.reduce((s, b) => s + b.runs, 0);
       const legalBallsBowled = bowlingBalls.length;
       const economy = legalBallsBowled > 0 ? +((runsConceded / legalBallsBowled) * 6).toFixed(2) : 0;
-      const bowlingAvg = wickets > 0 ? +(runsConceded / wickets).toFixed(1) : null;
+      const bowlingAvg = wickets > 0 ? +(runsConceded / wickets).toFixed(2) : null;
+      const bowlingOvers = `${Math.floor(legalBallsBowled / 6)}.${legalBallsBowled % 6}`;
 
-      // Recent matches (via MatchPlayer)
+      // Best bowling per innings (most wickets, then fewest runs)
+      const bowlingByInnings = new Map<string, { wickets: number; runs: number }>();
+      for (const b of bowlingBalls) {
+        const prev = bowlingByInnings.get(b.inningsId) ?? { wickets: 0, runs: 0 };
+        bowlingByInnings.set(b.inningsId, {
+          wickets: prev.wickets + (b.isWicket && b.dismissalType !== 'RUN_OUT' ? 1 : 0),
+          runs: prev.runs + b.runs,
+        });
+      }
+      const bestBowling = Array.from(bowlingByInnings.values())
+        .sort((a, b) => b.wickets - a.wickets || a.runs - b.runs)[0];
+      const bestBowlingStr = bestBowling ? `${bestBowling.wickets}/${bestBowling.runs}` : null;
+
+      // ── Catches: balls where dismissalType=CAUGHT and bowler is someone else ─
+      const catches = await ctx.prisma.ballByBall.count({
+        where: {
+          dismissalType: 'CAUGHT',
+          isWicket: true,
+          deletedAt: null,
+          // fielder would be our userId - but MatchPlayer links to userId
+          bowler: { userId: { not: input.userId } }, // they didn't bowl it
+          batsman: { userId: { not: input.userId } }, // they didn't bat it
+          // We approximate catches as wickets taken where this user was fielder
+          // Since we don't have a dedicated fielder field yet, count run-outs attributed to them
+        },
+      });
+      // More accurate: count from BallByBall where dismissedId matches a MatchPlayer of this user
+      // For now use the inferred catch count from bowling records
+      const catchesTaken = await ctx.prisma.ballByBall.count({
+        where: {
+          dismissalType: 'CAUGHT',
+          isWicket: true,
+          deletedAt: null,
+          bowler: { userId: input.userId }, // caught & bowled
+        },
+      });
+
+      // ── Matches played (unique match IDs from MatchPlayer) ───────────
+      const matchPlayerRecords = await ctx.prisma.matchPlayer.findMany({
+        where: { userId: input.userId },
+        select: { matchId: true, match: { select: { id: true, status: true, startTime: true } } },
+      });
+      const uniqueMatchIds = new Set(matchPlayerRecords.map(m => m.matchId));
+      const matchesPlayed = uniqueMatchIds.size;
+
+      // ── Recent matches (via MatchPlayer) ────────────────────────────
       const matchPlayers = await ctx.prisma.matchPlayer.findMany({
         where: { userId: input.userId },
         include: {
@@ -104,7 +163,7 @@ export const playerRouter = router({
         teams: user.teamMemberships,
         awards: user.awards,
         batting: {
-          matches: uniqueInnings,
+          matches: matchesPlayed,
           innings: uniqueInnings,
           runs: totalRuns,
           balls: totalBalls,
@@ -113,13 +172,21 @@ export const playerRouter = router({
           strikeRate,
           average,
           dismissals,
+          highestScore,
+          fifties,
+          hundreds,
         },
         bowling: {
           wickets,
           runsConceded,
           legalBalls: legalBallsBowled,
+          overs: bowlingOvers,
           economy,
           average: bowlingAvg,
+          bestBowling: bestBowlingStr,
+        },
+        fielding: {
+          catches: catchesTaken,
         },
         recentMatches: matchPlayers.map(mp => ({
           matchId: mp.matchId,
