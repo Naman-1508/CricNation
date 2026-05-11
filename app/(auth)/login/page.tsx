@@ -2,13 +2,26 @@
 
 import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function LoginPage() {
+function LoginContent() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+
   return (
-    <div className="min-h-screen bg-mesh flex flex-col items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-[#0A0A0A] flex flex-col items-center justify-center px-4 relative overflow-hidden">
       {/* Background orbs */}
-      <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/8 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-amber-500/6 rounded-full blur-3xl pointer-events-none" />
+      <motion.div
+        animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-1/4 left-1/4 w-72 h-72 bg-[#E8390E]/15 rounded-full blur-[80px] pointer-events-none"
+      />
+      <motion.div
+        animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.35, 0.2] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        className="absolute bottom-1/4 right-1/4 w-56 h-56 bg-blue-600/10 rounded-full blur-[70px] pointer-events-none"
+      />
 
       {/* Logo */}
       <motion.div
@@ -16,23 +29,31 @@ export default function LoginPage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8 text-center"
       >
-        <div className="text-5xl mb-3">🏏</div>
-        <h1 className="text-3xl font-bold gradient-text">CricNation</h1>
-        <p className="text-sm text-muted-foreground mt-1">Score. Compete. Celebrate.</p>
+        <div className="text-5xl mb-4">🏏</div>
+        <h1 className="text-4xl font-black text-white tracking-tight">CricNation</h1>
+        <p className="text-sm text-white/50 mt-2 font-medium">Score. Compete. Celebrate.</p>
       </motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="w-full max-w-sm glass-card p-6 text-center"
+        transition={{ delay: 0.15 }}
+        className="w-full max-w-sm bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-7 text-center shadow-2xl"
       >
         <h2 className="font-bold text-xl text-white mb-2">Welcome Back</h2>
-        <p className="text-sm text-white/60 mb-8">Sign in to manage your teams and score matches.</p>
+        <p className="text-sm text-white/50 mb-8 leading-relaxed">
+          Sign in to manage your teams, score live matches, and join tournaments.
+        </p>
+
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl px-4 py-3 mb-6">
+            Sign in failed. Please try again.
+          </div>
+        )}
 
         <button
           onClick={() => signIn("google", { callbackUrl: "/" })}
-          className="w-full bg-white text-black font-semibold py-3.5 rounded-2xl flex items-center justify-center gap-3 hover:bg-gray-100 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.1)]"
+          className="w-full bg-white text-black font-semibold py-3.5 rounded-2xl flex items-center justify-center gap-3 hover:bg-gray-100 active:scale-95 transition-all shadow-lg shadow-white/10"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -42,21 +63,29 @@ export default function LoginPage() {
           </svg>
           Continue with Google
         </button>
-        
-        <p className="text-xs text-center text-muted-foreground mt-5">
+
+        <p className="text-xs text-white/30 mt-5">
           By continuing, you agree to our{" "}
-          <span className="text-primary underline cursor-pointer">Terms of Service</span>
+          <span className="text-white/60 underline cursor-pointer">Terms of Service</span>
         </p>
       </motion.div>
 
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="text-xs text-muted-foreground mt-6 text-center"
+        transition={{ delay: 0.4 }}
+        className="text-xs text-white/30 mt-6 text-center flex items-center gap-1"
       >
-        🔒 Secured with end-to-end encryption
+        🔒 Secured with Google OAuth 2.0
       </motion.p>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0A0A0A]" />}>
+      <LoginContent />
+    </Suspense>
   );
 }
