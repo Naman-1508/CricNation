@@ -34,10 +34,10 @@ async function main() {
     data: {
       name: "Mumbai Indians",
       shortName: "MI",
-      creatorId: user1.id,
+      createdById: user1.id,
       colorHex: "#1D4ED8",
       homeGround: "Wankhede Stadium",
-      players: {
+      members: {
         create: [
           { name: "Rohit Sharma", role: "CAPTAIN" },
           { name: "Suryakumar Yadav", role: "VICE_CAPTAIN" },
@@ -54,10 +54,10 @@ async function main() {
     data: {
       name: "Chennai Super Kings",
       shortName: "CSK",
-      creatorId: user2.id,
+      createdById: user2.id,
       colorHex: "#F5A623",
       homeGround: "M. A. Chidambaram Stadium",
-      players: {
+      members: {
         create: [
           { name: "MS Dhoni", role: "CAPTAIN" },
           { name: "Ravindra Jadeja", role: "VICE_CAPTAIN" },
