@@ -1,10 +1,9 @@
 import { initTRPC, TRPCError } from '@trpc/server';
 import { PrismaClient } from '@prisma/client';
 
-// ── Prisma singleton ───────────────────────────────────────────
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({ log: ['error'] });
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+import { prisma } from "@/lib/prisma";
+export { prisma };
+
 
 // ── Context ────────────────────────────────────────────────────
 export type Context = {
@@ -12,15 +11,12 @@ export type Context = {
   session: { user: { id: string; name?: string | null; email?: string | null } } | null;
 };
 
+import { auth } from "@/auth";
+
 export async function createContext(): Promise<Context> {
-  // Gracefully attempt to load auth from next-auth v5 config file
   let session: Context['session'] = null;
   try {
-    // Dynamic import so it doesn't crash if auth.ts doesn't exist yet
-    const mod = await import('@/auth').catch(() => null);
-    if (mod?.auth) {
-      session = (await mod.auth()) as Context['session'];
-    }
+    session = (await auth()) as Context['session'];
   } catch {
     // Auth not configured — continue as unauthenticated
   }

@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { trpc } from "@/app/_trpc/client";
 import { useSession } from "next-auth/react";
-import Image from "next/image";
 
 const COLOR_PRESETS = [
   "#E8390E", "#F5A623", "#2563EB", "#16A34A", "#7C3AED",
@@ -113,7 +112,7 @@ function PlayerSearchInput({
                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F2EFE9] transition-colors border-b border-[rgba(107,74,42,0.06)] last:border-0 text-left"
               >
                 {user.image ? (
-                  <Image src={user.image} alt={user.name ?? ""} width={40} height={40} className="w-10 h-10 rounded-xl object-cover" />
+                  <img src={user.image} alt={user.name ?? ""} className="w-10 h-10 rounded-xl object-cover" />
                 ) : (
                   <div className="w-10 h-10 rounded-xl bg-[#E8390E]/10 flex items-center justify-center text-sm font-bold text-[#E8390E]">
                     {getInitials(user.name ?? "?")}
@@ -333,7 +332,7 @@ export default function CreateTeamPage() {
                 {/* Creator (captain) row */}
                 <div className="flex items-center gap-3 px-4 py-3 border-b border-[rgba(107,74,42,0.07)]">
                   {session?.user?.image ? (
-                    <Image src={session.user.image} alt="" width={40} height={40} className="w-10 h-10 rounded-xl object-cover" />
+                    <img src={session.user.image} alt="" className="w-10 h-10 rounded-xl object-cover" />
                   ) : (
                     <div className="w-10 h-10 bg-[#E8390E]/10 rounded-xl flex items-center justify-center">
                       <User className="w-5 h-5 text-[#E8390E]" />
@@ -354,7 +353,7 @@ export default function CreateTeamPage() {
                       className="flex items-center gap-3 px-4 py-3 border-b border-[rgba(107,74,42,0.07)] last:border-0"
                     >
                       {p.image ? (
-                        <Image src={p.image} alt="" width={40} height={40} className="w-10 h-10 rounded-xl object-cover" />
+                        <img src={p.image} alt="" className="w-10 h-10 rounded-xl object-cover" />
                       ) : (
                         <div className="w-10 h-10 bg-[#F2EFE9] rounded-xl flex items-center justify-center font-bold text-sm text-[#4A4540]">
                           {getInitials(p.name)}

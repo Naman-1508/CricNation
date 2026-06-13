@@ -6,6 +6,7 @@ import { RotateCcw, ArrowRight, Trophy, ChevronLeft, Zap } from "lucide-react";
 import { trpc } from "@/app/_trpc/client";
 import { useRouter } from "next/navigation";
 import { pusherClient } from "@/lib/pusherClient";
+import ShotPickerSheet from "@/components/ShotPickerSheet";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type PlayerRef = { id: string; name: string };
@@ -328,10 +329,22 @@ export default function MatchScoringPage({ params }: { params: { matchId: string
   const [phase, setPhase] = useState<"init" | "scoring">("init");
   const [initStep, setInitStep] = useState<"striker" | "nonStriker" | "bowler">("striker");
 
+  // Shot Picker Flow
+  const [shotDataPending, setShotDataPending] = useState<{ ballId: string; runs: number } | null>(null);
+
   const isInitialised = strikerId && nonStrikerId && bowlerId;
 
   // Mutations
-  const recordBallMutation = trpc.match.recordBall.useMutation({ onSuccess: () => refetch() });
+  const recordBallMutation = trpc.match.recordBall.useMutation({
+    onSuccess: (data) => {
+      refetch();
+      // If runs scored off the bat, open shot picker
+      if (data.ball && data.ball.runs > 0 && !data.ball.isWide && !data.ball.isNoBall && !data.ball.isWicket && !data.ball.isBye && !data.ball.isLegBye) {
+        setShotDataPending({ ballId: data.ball.id, runs: data.ball.runs });
+      }
+    }
+  });
+  const updateShotMutation = trpc.match.updateBallShot.useMutation();
   const undoMutation = trpc.match.undoLastBall.useMutation({ onSuccess: () => { refetch(); showToastMsg("Last ball removed", "amber"); } });
   const completeInningsMutation = trpc.match.completeInnings.useMutation({ onSuccess: () => { refetch(); setShowInningsComplete(true); } });
   const startSecondInningsMutation = trpc.match.startSecondInnings.useMutation({
@@ -480,6 +493,14 @@ export default function MatchScoringPage({ params }: { params: { matchId: string
     setPendingWicketType(type);
     recordBall("W", 0, true, false, type);
     showToastMsg(`Wicket! ${type.replace(/_/g, " ")}`, "red");
+  };
+
+  // ── Handle Shot Save ───────────────────────────────────────────────────────
+  const saveShotData = (shotType: string | null, fieldAngle: number | null) => {
+    if (shotDataPending) {
+      updateShotMutation.mutate({ ballId: shotDataPending.ballId, shotType: shotType ?? undefined, fieldAngle: fieldAngle ?? undefined });
+      setShotDataPending(null);
+    }
   };
 
   // ── Handle undo ────────────────────────────────────────────────────────────
@@ -913,6 +934,13 @@ export default function MatchScoringPage({ params }: { params: { matchId: string
         players={availableBowlers}
         onSelect={p => { setBowlerId(p.id); setShowNewBowler(false); showToastMsg(`${p.name} will bowl`, "blue"); }}
         allowClose={false}
+      />
+
+      <ShotPickerSheet
+        isOpen={!!shotDataPending}
+        runs={shotDataPending?.runs ?? 0}
+        onSave={saveShotData}
+        onSkip={() => setShotDataPending(null)}
       />
     </div>
   );

@@ -1,134 +1,146 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Bell, MapPin, ChevronRight, Activity, Trophy, Users, TrendingUp, Plus, Star, Shield, Zap } from "lucide-react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ChevronRight, Activity, Trophy, Users, Zap, Shield, Plus,
+  TrendingUp, MapPin, Star, Play
+} from "lucide-react";
 import Link from "next/link";
 import { trpc } from "@/app/_trpc/client";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { NotificationBell, NotificationPanel } from "@/components/NotificationCenter";
 
-// ─── LANDING PAGE (For Unauthenticated Users) ─────────────────────────────────
+// ── Animation presets ──────────────────────────────────────────────────────
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 18 },
+  animate: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 280, damping: 26, delay } },
+});
+
+// ── Landing Page ───────────────────────────────────────────────────────────
 function LandingPage() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.2, delayChildren: 0.1 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 80, damping: 15 } }
-  };
-
   return (
-    <div className="min-h-[100dvh] bg-[#0A0A0A] text-white relative overflow-hidden flex flex-col selection:bg-[#E8390E] selection:text-white">
-      {/* Dynamic Background Effects */}
-      <motion.div 
-        animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-0 right-0 w-[60vw] h-[60vw] max-w-[600px] max-h-[600px] bg-[#E8390E]/20 rounded-full blur-[100px] pointer-events-none translate-x-1/3 -translate-y-1/3" 
+    <div className="min-h-[100dvh] bg-[#0A0A0A] text-white relative overflow-hidden flex flex-col">
+      {/* Ambient lights */}
+      <motion.div
+        animate={{ scale: [1, 1.12, 1], opacity: [0.25, 0.45, 0.25] }}
+        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-0 right-0 w-[70vw] h-[70vw] max-w-[500px] max-h-[500px] bg-[#E8390E]/20 rounded-full blur-[120px] pointer-events-none translate-x-1/3 -translate-y-1/4"
       />
-      <motion.div 
-        animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute bottom-0 left-0 w-[50vw] h-[50vw] max-w-[500px] max-h-[500px] bg-blue-600/15 rounded-full blur-[90px] pointer-events-none -translate-x-1/3 translate-y-1/3" 
+      <motion.div
+        animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.3, 0.15] }}
+        transition={{ duration: 11, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+        className="absolute bottom-0 left-0 w-[60vw] h-[60vw] max-w-[400px] max-h-[400px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none -translate-x-1/3 translate-y-1/4"
       />
 
-      {/* Navbar */}
-      <nav className="flex items-center justify-between px-6 py-5 relative z-20">
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-2">
-          <span className="text-3xl">🏏</span>
-          <span className="text-xl font-bold tracking-tight text-white">CricNation</span>
+      {/* Nav */}
+      <nav className="flex items-center justify-between px-6 pt-safe py-4 relative z-10">
+        <motion.div {...fadeUp(0.05)} className="flex items-center gap-2.5">
+          <div className="w-9 h-9 bg-gradient-to-br from-[#E8390E] to-[#C42E09] rounded-xl flex items-center justify-center text-base shadow-lg">
+            🏏
+          </div>
+          <span className="text-lg font-black tracking-tight">CricNation</span>
         </motion.div>
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+        <motion.div {...fadeUp(0.1)}>
           <Link href="/login">
-            <button className="bg-white/10 hover:bg-white/20 text-white px-6 py-2.5 rounded-full text-sm font-semibold backdrop-blur-md transition-all shadow-lg hover:shadow-white/10">
+            <motion.button
+              whileTap={{ scale: 0.93 }}
+              className="glass-card px-5 py-2 rounded-full text-sm font-semibold text-white btn-native"
+            >
               Sign In
-            </button>
+            </motion.button>
           </Link>
         </motion.div>
       </nav>
 
-      {/* Hero Section */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 text-center relative z-20 pt-8 pb-20">
-        <motion.div 
-          variants={containerVariants} 
-          initial="hidden" 
-          animate="show" 
-          className="max-w-4xl mx-auto w-full flex flex-col items-center"
+      {/* Hero */}
+      <main className="flex-1 flex flex-col items-center justify-center px-6 text-center relative z-10 pt-8 pb-24">
+        <motion.div {...fadeUp(0.1)}
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E8390E]/10 border border-[#E8390E]/25 text-xs font-bold text-[#E8390E] mb-8"
         >
-          <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-semibold tracking-wide text-[#E8390E] mb-8 shadow-inner shadow-[#E8390E]/10">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E8390E] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#E8390E]"></span>
-            </span>
-            Live Ball-by-Ball Scoring
-          </motion.div>
-          
-          <motion.h1 variants={itemVariants} className="text-5xl md:text-7xl font-black tracking-tighter leading-[1.1] mb-6">
-            Score matches like a <br className="hidden md:block"/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E8390E] via-amber-500 to-yellow-400 drop-shadow-sm">Professional.</span>
-          </motion.h1>
-          
-          <motion.p variants={itemVariants} className="text-white/60 text-lg md:text-xl max-w-xl mx-auto mb-10 leading-relaxed font-medium">
-            The world's most advanced cricket scoring network. Build teams, host tournaments, and broadcast live scores to fans everywhere.
-          </motion.p>
+          <span className="w-1.5 h-1.5 bg-[#E8390E] rounded-full live-dot" />
+          Live Ball-by-Ball Scoring
+        </motion.div>
 
-          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full px-4">
-            <Link href="/login" className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto bg-gradient-to-r from-[#E8390E] to-[#C42E09] text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-[0_0_40px_rgba(232,57,14,0.3)] hover:shadow-[0_0_60px_rgba(232,57,14,0.5)] hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
-                Get Started Free <ChevronRight className="w-5 h-5" />
-              </button>
-            </Link>
-            <Link href="/login" className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto bg-white/5 hover:bg-white/10 border border-white/10 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all backdrop-blur-sm hover:-translate-y-1">
-                Explore Matches
-              </button>
-            </Link>
-          </motion.div>
+        <motion.h1 {...fadeUp(0.15)} className="text-5xl md:text-7xl font-black tracking-tight leading-[1.1] mb-5">
+          Score like a<br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E8390E] via-amber-400 to-yellow-300">
+            Professional.
+          </span>
+        </motion.h1>
 
-          {/* Feature Highlights */}
-          <motion.div 
-            variants={containerVariants}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-24"
-          >
-            {[
-              { icon: Zap, title: "Real-Time Sync", desc: "WebSockets instantly broadcast every ball to fans watching the digital scorecard.", color: "blue", bg: "bg-blue-500/20", text: "text-blue-400" },
-              { icon: Trophy, title: "Tournament Manager", desc: "Auto-generate fixtures, calculate NRR, and manage points tables effortlessly.", color: "red", bg: "bg-[#E8390E]/20", text: "text-[#E8390E]" },
-              { icon: Shield, title: "Player Profiles", desc: "Verified Google accounts mean authentic stats and secure tournament data.", color: "green", bg: "bg-green-500/20", text: "text-green-400" },
-            ].map((feat, i) => (
-              <motion.div 
-                key={feat.title}
-                variants={itemVariants}
-                whileHover={{ y: -5, scale: 1.02 }}
-                className="bg-white/5 border border-white/10 rounded-3xl p-6 text-left backdrop-blur-sm hover:bg-white/10 transition-colors"
-              >
-                <div className={`w-12 h-12 ${feat.bg} rounded-2xl flex items-center justify-center mb-4`}>
-                  <feat.icon className={`w-6 h-6 ${feat.text}`} />
-                </div>
-                <h3 className="text-lg font-bold mb-2 text-white/90">{feat.title}</h3>
-                <p className="text-sm text-white/50 leading-relaxed">{feat.desc}</p>
-              </motion.div>
-            ))}
-          </motion.div>
+        <motion.p {...fadeUp(0.2)} className="text-white/50 text-base md:text-lg max-w-sm mx-auto mb-10 leading-relaxed">
+          Real-time cricket scoring with wagon wheel analytics, team management and live broadcast.
+        </motion.p>
+
+        <motion.div {...fadeUp(0.25)} className="flex flex-col gap-3 w-full max-w-xs">
+          <Link href="/login" className="w-full">
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              className="w-full bg-gradient-to-r from-[#E8390E] to-[#C42E09] text-white py-4 rounded-2xl font-bold text-base glow-brand btn-native"
+            >
+              Get Started Free
+            </motion.button>
+          </Link>
+          <Link href="/login" className="w-full">
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              className="w-full glass-card text-white py-4 rounded-2xl font-semibold text-base btn-native"
+            >
+              Explore Matches
+            </motion.button>
+          </Link>
+        </motion.div>
+
+        {/* Feature cards */}
+        <motion.div
+          initial="hidden" animate="show"
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.35 } } }}
+          className="grid grid-cols-1 gap-4 w-full max-w-sm mt-16"
+        >
+          {[
+            { icon: Zap, title: "Real-Time WebSockets", desc: "Every ball syncs to all spectators instantly.", accent: "text-blue-400", bg: "bg-blue-500/15" },
+            { icon: TrendingUp, title: "Wagon Wheel Analytics", desc: "Shot tracking and field placement per batsman.", accent: "text-emerald-400", bg: "bg-emerald-500/15" },
+            { icon: Trophy, title: "Tournament Manager", desc: "Auto-fixtures, NRR, points table—fully automated.", accent: "text-amber-400", bg: "bg-amber-500/15" },
+          ].map((f) => (
+            <motion.div
+              key={f.title}
+              variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
+              className="glass-card rounded-2xl p-4 flex items-start gap-3 text-left"
+            >
+              <div className={`w-10 h-10 ${f.bg} rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                <f.icon className={`w-5 h-5 ${f.accent}`} />
+              </div>
+              <div>
+                <p className="font-bold text-sm text-white mb-0.5">{f.title}</p>
+                <p className="text-xs text-white/40 leading-relaxed">{f.desc}</p>
+              </div>
+            </motion.div>
+          ))}
         </motion.div>
       </main>
     </div>
   );
 }
 
-// ─── DASHBOARD (For Authenticated Users) ─────────────────────────────────────
+// ── Dashboard Skeleton ─────────────────────────────────────────────────────
+function Skeleton({ className }: { className?: string }) {
+  return (
+    <div className={`bg-white/5 rounded-xl animate-pulse ${className}`} />
+  );
+}
+
+// ── Dashboard ──────────────────────────────────────────────────────────────
 function Dashboard({ session }: { session: any }) {
   const { data: tournaments, isLoading: loadingT } = trpc.tournament.getAll.useQuery();
-  const { data: myTeams } = trpc.team.getMyTeams.useQuery();
-  const [greeting, setGreeting] = useState("Hey there");
+  const { data: myTeams, isLoading: loadingTeams } = trpc.team.getMyTeams.useQuery();
+  const [greeting, setGreeting] = useState("Hey");
   const [location, setLocation] = useState<string | null>(null);
+  const [notifOpen, setNotifOpen] = useState(false);
 
   useEffect(() => {
     const h = new Date().getHours();
-    const name = session?.user?.name?.split(" ")[0];
+    const name = session?.user?.name?.split(" ")[0] ?? "";
     const greet = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
     setGreeting(name ? `${greet}, ${name}` : greet);
 
@@ -145,177 +157,298 @@ function Dashboard({ session }: { session: any }) {
   }, [session]);
 
   const liveCount = tournaments?.filter((t: any) => t.status === "LIVE").length ?? 0;
+  const totalTournaments = tournaments?.length ?? 0;
+  const totalTeams = myTeams?.length ?? 0;
+
   const stats = [
-    { label: "Live Matches", value: liveCount || "—", icon: Activity, color: "text-[#E8390E]", bg: "bg-[#E8390E]/8" },
-    { label: "Tournaments", value: tournaments?.length ?? "—", icon: Trophy, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "My Teams", value: myTeams?.length ?? "—", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Live Now", value: liveCount, icon: Activity, color: "text-[#E8390E]", bg: "bg-[#E8390E]/15", glow: "shadow-[0_0_20px_rgba(232,57,14,0.2)]" },
+    { label: "Tournaments", value: totalTournaments, icon: Trophy, color: "text-amber-400", bg: "bg-amber-500/15", glow: "" },
+    { label: "My Teams", value: totalTeams, icon: Shield, color: "text-blue-400", bg: "bg-blue-500/15", glow: "" },
   ];
 
+  const liveTournaments = tournaments?.filter((t: any) => t.status === "LIVE") ?? [];
+  const upcomingTournaments = tournaments?.filter((t: any) => t.status !== "LIVE") ?? [];
+
   return (
-    <div className="min-h-screen bg-[#FAFAF8] pb-28">
-      {/* Header */}
-      <div className="bg-white border-b border-[rgba(107,74,42,0.1)] px-5 pt-12 pb-4">
-        <div className="flex items-center justify-between">
+    <div className="min-h-[100dvh] bg-[#0A0A0A] pb-24 relative overflow-hidden">
+      {/* Background ambient */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-[#E8390E]/6 rounded-full blur-[120px]" />
+        <div className="absolute bottom-1/3 left-0 w-64 h-64 bg-blue-600/5 rounded-full blur-[100px]" />
+      </div>
+
+      {/* Notification panel */}
+      <NotificationPanel isOpen={notifOpen} onClose={() => setNotifOpen(false)} />
+
+      {/* ── Header ── */}
+      <div className="relative z-10 px-5 pt-safe pt-14 pb-5">
+        <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm text-[#8A8278]">{greeting} 👋</p>
-            <h1 className="text-2xl font-bold text-[#1A1A1A] tracking-tight">CricNation</h1>
+            <p className="text-white/40 text-sm mb-0.5">{greeting} 👋</p>
+            <h1 className="text-2xl font-black text-white tracking-tight">CricNation</h1>
             {location && (
-              <p className="text-xs text-[#8A8278] flex items-center gap-1 mt-0.5">
+              <motion.p
+                initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+                className="text-white/25 text-xs flex items-center gap-1 mt-0.5"
+              >
                 <MapPin className="w-3 h-3" /> {location}
-              </p>
+              </motion.p>
             )}
           </div>
-          <button className="w-10 h-10 bg-[#F2EFE9] rounded-2xl flex items-center justify-center relative">
-            <Bell className="w-4.5 h-4.5 text-[#4A4540]" />
-            <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#E8390E] rounded-full" />
-          </button>
+          <div className="flex items-center gap-2 mt-1">
+            <NotificationBell onOpen={() => setNotifOpen(true)} />
+            {session?.user?.image ? (
+              <img
+                src={session.user.image}
+                className="w-10 h-10 rounded-2xl object-cover border border-white/15"
+                alt="avatar"
+              />
+            ) : (
+              <div className="w-10 h-10 bg-[#E8390E] rounded-2xl flex items-center justify-center text-white font-bold text-sm">
+                {session?.user?.name?.[0] ?? "U"}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="px-4 pt-5 space-y-6">
-        {/* Stats Row */}
-        <div className="grid grid-cols-3 gap-3">
+      <div className="relative z-10 px-4 space-y-5">
+
+        {/* ── Stats Row ── */}
+        <div className="grid grid-cols-3 gap-2.5">
           {stats.map((s, i) => (
-            <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-              className="bg-white rounded-2xl border border-[rgba(107,74,42,0.13)] p-3 text-center">
-              <div className={`w-8 h-8 ${s.bg} rounded-xl flex items-center justify-center mx-auto mb-2`}>
-                <s.icon className={`w-4 h-4 ${s.color}`} />
+            <motion.div
+              key={s.label}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0, transition: { delay: i * 0.08 } }}
+              className={`glass-card rounded-2xl p-3.5 text-center ${s.glow}`}
+            >
+              <div className={`w-9 h-9 ${s.bg} rounded-xl flex items-center justify-center mx-auto mb-2`}>
+                <s.icon className={`w-4.5 h-4.5 ${s.color}`} />
               </div>
-              <p className="text-xl font-bold text-[#1A1A1A]">{s.value}</p>
-              <p className="text-[10px] text-[#8A8278] uppercase tracking-wide leading-tight mt-0.5">{s.label}</p>
+              <p className="text-2xl font-black text-white leading-none">{s.value}</p>
+              <p className="text-[9px] text-white/35 uppercase tracking-widest mt-1 leading-tight font-semibold">{s.label}</p>
             </motion.div>
           ))}
         </div>
 
-        {/* Start Match CTA */}
-        <Link href="/score">
-          <motion.div whileTap={{ scale: 0.98 }}
-            className="rounded-2xl overflow-hidden p-5 flex items-center justify-between relative shadow-lg"
-            style={{ background: "linear-gradient(135deg,#E8390E 0%,#C42E09 100%)" }}>
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full" />
-            <div>
-              <p className="text-white/70 text-xs font-medium mb-1">Score a match now</p>
-              <h2 className="text-white font-bold text-xl">Start Match</h2>
-              <p className="text-white/60 text-xs mt-1">Ball-by-ball · Real-time · Free</p>
-            </div>
-            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-2xl">🏏</div>
-          </motion.div>
-        </Link>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-3">
-          <Link href="/teams/new">
-            <motion.div whileTap={{ scale: 0.97 }}
-              className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 hover:border-[rgba(107,74,42,0.25)] transition-colors shadow-sm">
-              <div className="w-10 h-10 bg-blue-50 rounded-2xl flex items-center justify-center mb-3">
-                <Users className="w-5 h-5 text-blue-600" />
+        {/* ── Start Match CTA ── */}
+        <motion.div {...fadeUp(0.12)}>
+          <Link href="/score">
+            <motion.div
+              whileTap={{ scale: 0.97 }}
+              className="relative overflow-hidden rounded-3xl p-5 btn-native"
+              style={{ background: "linear-gradient(135deg, #E8390E 0%, #B83208 100%)" }}
+            >
+              {/* Decorative circles */}
+              <div className="absolute -right-6 -top-6 w-28 h-28 bg-white/10 rounded-full" />
+              <div className="absolute -right-2 -bottom-4 w-16 h-16 bg-white/8 rounded-full" />
+              <div className="relative flex items-center justify-between">
+                <div>
+                  <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest mb-1.5">Tap to begin</p>
+                  <h2 className="text-white font-black text-2xl leading-none mb-1">Start Scoring</h2>
+                  <p className="text-white/60 text-xs mt-1.5 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-white/50 rounded-full live-dot" />
+                    Ball-by-ball · Real-time · Free
+                  </p>
+                </div>
+                <div className="w-16 h-16 bg-white/15 rounded-2xl flex items-center justify-center flex-shrink-0 ml-4">
+                  <Play className="w-7 h-7 text-white fill-white" />
+                </div>
               </div>
-              <p className="font-semibold text-sm text-[#1A1A1A]">Create Team</p>
-              <p className="text-xs text-[#8A8278] mt-0.5">Build your squad</p>
+            </motion.div>
+          </Link>
+        </motion.div>
+
+        {/* ── Quick Actions ── */}
+        <motion.div {...fadeUp(0.18)} className="grid grid-cols-2 gap-2.5">
+          <Link href="/teams/new">
+            <motion.div
+              whileTap={{ scale: 0.95 }}
+              className="glass-card rounded-2xl p-4 btn-native hover:bg-white/8 transition-colors"
+            >
+              <div className="w-10 h-10 bg-blue-500/15 rounded-xl flex items-center justify-center mb-3">
+                <Users className="w-5 h-5 text-blue-400" />
+              </div>
+              <p className="font-bold text-sm text-white">Create Team</p>
+              <p className="text-xs text-white/35 mt-0.5">Build your squad</p>
             </motion.div>
           </Link>
           <Link href="/tournaments/new">
-            <motion.div whileTap={{ scale: 0.97 }}
-              className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 hover:border-[rgba(107,74,42,0.25)] transition-colors shadow-sm">
-              <div className="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center mb-3">
-                <Trophy className="w-5 h-5 text-amber-600" />
+            <motion.div
+              whileTap={{ scale: 0.95 }}
+              className="glass-card rounded-2xl p-4 btn-native hover:bg-white/8 transition-colors"
+            >
+              <div className="w-10 h-10 bg-amber-500/15 rounded-xl flex items-center justify-center mb-3">
+                <Trophy className="w-5 h-5 text-amber-400" />
               </div>
-              <p className="font-semibold text-sm text-[#1A1A1A]">Host Tournament</p>
-              <p className="text-xs text-[#8A8278] mt-0.5">Free · Auto-fixtures</p>
+              <p className="font-bold text-sm text-white">Host Tournament</p>
+              <p className="text-xs text-white/35 mt-0.5">Auto-fixtures · Free</p>
             </motion.div>
           </Link>
-        </div>
+        </motion.div>
 
-        {/* My Teams */}
-        {myTeams && myTeams.length > 0 && (
-          <section>
+        {/* ── Live Tournaments ── */}
+        {liveTournaments.length > 0 && (
+          <motion.section {...fadeUp(0.22)}>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-[#1A1A1A]">My Teams</h2>
-              <Link href="/teams" className="text-[#E8390E] text-sm font-medium flex items-center gap-0.5">See All <ChevronRight className="w-3.5 h-3.5" /></Link>
-            </div>
-            <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-4 px-4 pb-2">
-              {myTeams.map((team: any) => (
-                <Link href={`/teams/${team.id}`} key={team.id} className="shrink-0">
-                  <motion.div whileTap={{ scale: 0.96 }}
-                    className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-3 w-32 text-center hover:border-[rgba(107,74,42,0.25)] transition-colors shadow-sm">
-                    <div className="w-12 h-12 rounded-xl mx-auto mb-2 flex items-center justify-center font-bold text-white text-xs" style={{ backgroundColor: team.colorHex }}>
-                      {team.shortName}
-                    </div>
-                    <p className="text-xs font-semibold text-[#1A1A1A] truncate">{team.name}</p>
-                    <p className="text-[10px] text-[#8A8278] mt-0.5">{team.memberCount || 1} members</p>
-                  </motion.div>
-                </Link>
-              ))}
-              <Link href="/teams/new" className="shrink-0">
-                <div className="bg-[#F2EFE9] border-2 border-dashed border-[rgba(107,74,42,0.2)] rounded-2xl p-3 w-32 h-full flex flex-col items-center justify-center text-[#8A8278] hover:border-[#E8390E] hover:text-[#E8390E] transition-colors min-h-[108px]">
-                  <Plus className="w-5 h-5 mb-1" />
-                  <p className="text-[10px] font-medium">New Team</p>
-                </div>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-[#E8390E] rounded-full live-dot" />
+                <h2 className="font-black text-white text-sm uppercase tracking-wide">Live Now</h2>
+              </div>
+              <Link href="/tournaments" className="text-[#E8390E] text-xs font-semibold flex items-center gap-0.5">
+                All <ChevronRight className="w-3.5 h-3.5" />
               </Link>
             </div>
-          </section>
-        )}
-
-        {/* Recent Tournaments */}
-        {!loadingT && tournaments && tournaments.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-[#1A1A1A]">Tournaments</h2>
-              <Link href="/tournaments" className="text-[#E8390E] text-sm font-medium flex items-center gap-0.5">See All <ChevronRight className="w-3.5 h-3.5" /></Link>
-            </div>
-            <div className="space-y-2.5">
-              {tournaments.slice(0, 3).map((t: any, i: number) => (
+            <div className="space-y-2">
+              {liveTournaments.slice(0, 3).map((t: any, i: number) => (
                 <Link key={t.id} href={`/tournaments/${t.id}`}>
-                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }} whileTap={{ scale: 0.98 }}
-                    className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 flex items-center gap-3 hover:border-[rgba(107,74,42,0.25)] transition-colors shadow-sm">
-                    <div className="w-11 h-11 bg-[#F2EFE9] rounded-xl flex items-center justify-center text-xl shrink-0">🏆</div>
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0, transition: { delay: i * 0.05 } }}
+                    whileTap={{ scale: 0.97 }}
+                    className="glass-card rounded-2xl p-4 flex items-center gap-3 btn-native hover:bg-white/8 transition-colors border-l-2 border-[#E8390E]"
+                  >
+                    <div className="w-11 h-11 bg-[#E8390E]/15 rounded-xl flex items-center justify-center text-lg flex-shrink-0">🏆</div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm text-[#1A1A1A] truncate">{t.name}</p>
-                      <p className="text-xs text-[#8A8278]">{t.format} · {t._count?.teams ?? 0} teams</p>
+                      <p className="font-bold text-sm text-white truncate">{t.name}</p>
+                      <p className="text-xs text-white/40">{t.format} · {t._count?.teams ?? 0} teams</p>
                     </div>
-                    <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${t.status === "LIVE" ? "bg-red-50 text-red-700 border border-red-200" : t.status === "UPCOMING" ? "bg-[#F2EFE9] text-[#4A4540]" : "bg-[#F2EFE9] text-[#8A8278]"}`}>
-                      {t.status === "LIVE" ? "● LIVE" : t.status}
+                    <span className="text-[10px] font-black text-[#E8390E] bg-[#E8390E]/15 px-2 py-1 rounded-lg border border-[#E8390E]/30 flex-shrink-0">
+                      ● LIVE
                     </span>
                   </motion.div>
                 </Link>
               ))}
             </div>
-          </section>
+          </motion.section>
         )}
 
-        {/* Empty state if no data at all */}
-        {!loadingT && (!tournaments || tournaments.length === 0) && (!myTeams || myTeams.length === 0) && (
-          <div className="text-center py-12">
-            <div className="text-5xl mb-4">🏏</div>
-            <h3 className="font-bold text-[#1A1A1A] mb-2">Welcome to CricNation!</h3>
-            <p className="text-[#8A8278] text-sm mb-6">Create a team and start scoring your first match.</p>
-            <Link href="/teams/new">
-              <button className="bg-[#E8390E] text-white font-semibold px-6 py-3 rounded-xl shadow-[0_4px_16px_rgba(232,57,14,0.35)]">
-                Create Your Team
-              </button>
-            </Link>
+        {/* ── My Teams ── */}
+        {!loadingTeams && myTeams && myTeams.length > 0 && (
+          <motion.section {...fadeUp(0.26)}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-black text-white text-sm uppercase tracking-wide">My Teams</h2>
+              <Link href="/teams" className="text-[#E8390E] text-xs font-semibold flex items-center gap-0.5">
+                See All <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+            <div className="flex gap-3 overflow-x-auto hide-scrollbar -mx-4 px-4 pb-2">
+              {myTeams.map((team: any, i: number) => (
+                <Link href={`/teams/${team.id}`} key={team.id} className="flex-shrink-0">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1, transition: { delay: i * 0.06 } }}
+                    whileTap={{ scale: 0.94 }}
+                    className="glass-card rounded-2xl p-3.5 w-28 text-center btn-native"
+                  >
+                    <div
+                      className="w-12 h-12 rounded-xl mx-auto mb-2 flex items-center justify-center font-black text-white text-xs shadow-lg"
+                      style={{ backgroundColor: team.colorHex ?? "#E8390E" }}
+                    >
+                      {team.shortName}
+                    </div>
+                    <p className="text-xs font-bold text-white truncate">{team.name}</p>
+                    <p className="text-[10px] text-white/30 mt-0.5">{team.memberCount || 1} members</p>
+                  </motion.div>
+                </Link>
+              ))}
+              <Link href="/teams/new" className="flex-shrink-0">
+                <div className="w-28 h-[96px] rounded-2xl border-2 border-dashed border-white/12 flex flex-col items-center justify-center gap-1.5 text-white/25 hover:border-[#E8390E]/50 hover:text-[#E8390E]/60 transition-colors btn-native">
+                  <Plus className="w-5 h-5" />
+                  <p className="text-[10px] font-semibold">New Team</p>
+                </div>
+              </Link>
+            </div>
+          </motion.section>
+        )}
+
+        {/* ── All Tournaments ── */}
+        {!loadingT && upcomingTournaments.length > 0 && (
+          <motion.section {...fadeUp(0.3)}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-black text-white text-sm uppercase tracking-wide">Tournaments</h2>
+              <Link href="/tournaments" className="text-[#E8390E] text-xs font-semibold flex items-center gap-0.5">
+                See All <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {upcomingTournaments.slice(0, 4).map((t: any, i: number) => (
+                <Link key={t.id} href={`/tournaments/${t.id}`}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0, transition: { delay: i * 0.05 } }}
+                    whileTap={{ scale: 0.97 }}
+                    className="glass-card rounded-2xl p-4 flex items-center gap-3 btn-native hover:bg-white/8 transition-colors"
+                  >
+                    <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-lg flex-shrink-0">🏆</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm text-white truncate">{t.name}</p>
+                      <p className="text-xs text-white/40">{t.format} · {t._count?.teams ?? 0} teams</p>
+                    </div>
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-lg border flex-shrink-0 ${
+                      t.status === "UPCOMING"
+                        ? "text-blue-400 bg-blue-500/10 border-blue-500/25"
+                        : "text-white/30 bg-white/5 border-white/10"
+                    }`}>
+                      {t.status}
+                    </span>
+                  </motion.div>
+                </Link>
+              ))}
+            </div>
+          </motion.section>
+        )}
+
+        {/* ── Loading skeletons ── */}
+        {(loadingT || loadingTeams) && (
+          <div className="space-y-3">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-3/4" />
           </div>
+        )}
+
+        {/* ── Empty state ── */}
+        {!loadingT && !loadingTeams && (!tournaments || tournaments.length === 0) && (!myTeams || myTeams.length === 0) && (
+          <motion.div
+            {...fadeUp(0.3)}
+            className="text-center py-14"
+          >
+            <div className="w-20 h-20 bg-[#E8390E]/10 rounded-3xl flex items-center justify-center mx-auto mb-5 text-3xl">
+              🏏
+            </div>
+            <h3 className="font-black text-white text-lg mb-2">Welcome to CricNation!</h3>
+            <p className="text-white/40 text-sm mb-6 max-w-[220px] mx-auto leading-relaxed">
+              Create a team and score your first match in minutes.
+            </p>
+            <Link href="/teams/new">
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                className="bg-gradient-to-r from-[#E8390E] to-[#C42E09] text-white font-bold px-6 py-3.5 rounded-2xl glow-brand btn-native"
+              >
+                Create Your Team
+              </motion.button>
+            </Link>
+          </motion.div>
         )}
       </div>
     </div>
   );
 }
 
-// ─── MAIN PAGE COMPONENT ──────────────────────────────────────────────────────
+// ── Main Export ────────────────────────────────────────────────────────────
 export default function HomePage() {
   const { data: session, status } = useSession();
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-[#1A1A1A] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+      <div className="min-h-[100dvh] bg-[#0A0A0A] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-white/15 border-t-[#E8390E] rounded-full animate-spin" />
       </div>
     );
   }
 
-  if (status === "unauthenticated" || !session) {
-    return <LandingPage />;
-  }
-
+  if (status === "unauthenticated" || !session) return <LandingPage />;
   return <Dashboard session={session} />;
 }

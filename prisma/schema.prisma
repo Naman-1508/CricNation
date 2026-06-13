@@ -275,6 +275,8 @@ model BallByBall {
   dismissalType String?   // BOWLED, CAUGHT, LBW, RUN_OUT, STUMPED
   dismissedId   String?
   fielderId     String?
+  shotType      String?   // COVER_DRIVE, PULL, HOOK, CUT, FLICK, SWEEP, etc.
+  fieldAngle    Float?    // 0-360 degrees for wagon wheel visualization
   timestamp     DateTime  @default(now())
   deletedAt     DateTime?
   undoneBy      String?

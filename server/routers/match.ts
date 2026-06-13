@@ -24,10 +24,26 @@ function bowlerStats(balls: any[], bowlerId: string) {
     if (b.isWide || b.isNoBall) r += 1;
     return s + r;
   }, 0);
-  const wickets = allBalls.filter((b: any) => b.isWicket && b.dismissalType !== 'RUN_OUT' && b.dismissalType !== 'RUN_OUT').length;
+  const wickets = allBalls.filter((b: any) => b.isWicket && b.dismissalType !== 'RUN_OUT').length;
   const overs = `${Math.floor(legalBalls / 6)}.${legalBalls % 6}`;
   const economy = legalBalls > 0 ? +((runs / legalBalls) * 6).toFixed(2) : 0;
   return { legalBalls, runs, wickets, overs, economy };
+}
+
+// ── Push a notification to a user (DB + Pusher) ────────────────────────────
+async function pushNotification(
+  prisma: any,
+  userId: string,
+  title: string,
+  message: string,
+  type: string,
+) {
+  try {
+    await prisma.notification.create({ data: { userId, title, message, type } });
+    await pusherServer.trigger(`user-${userId}`, 'notification', { title, message, type }).catch(() => {});
+  } catch {
+    // Never let notification errors break the main flow
+  }
 }
 
 // ── Router ─────────────────────────────────────────────────────────────────
@@ -53,7 +69,7 @@ export const matchRouter = router({
           }
         }
       });
-      if (!match) throw new Error("Match not found");
+      if (!match) throw new Error('Match not found');
 
       const currentInnings = match.innings[0];
       const balls = currentInnings?.balls || [];
@@ -67,21 +83,20 @@ export const matchRouter = router({
       const battingPlayers = match.matchPlayers.filter((p: any) => p.teamId === battingTeamId);
       const bowlingPlayers = match.matchPlayers.filter((p: any) => p.teamId === bowlingTeamId);
 
-      const dismissedIds = new Set(balls.filter((b: any) => b.isWicket && b.dismissalType !== 'RUN_OUT').map((b: any) => b.batsmanId));
+      const dismissedIds = new Set(
+        balls.filter((b: any) => b.isWicket && b.dismissalType !== 'RUN_OUT').map((b: any) => b.batsmanId)
+      );
 
-      // Build batting order: players who have batted, in order of first appearance
       const battedOrder: string[] = [];
       for (const b of balls) {
         if (!battedOrder.includes(b.batsmanId)) battedOrder.push(b.batsmanId);
       }
       const notYetBatted = battingPlayers.filter(p => !battedOrder.includes(p.id));
 
-      // Striker = last ball's batsman if not dismissed, else next in order
       const lastBall = balls[balls.length - 1];
       let strikerId: string | null = lastBall?.batsmanId ?? null;
       if (strikerId && dismissedIds.has(strikerId)) strikerId = null;
 
-      // Non-striker = second active batsman
       const activeBatsmanIds = battedOrder.filter(id => !dismissedIds.has(id));
       const nonStrikerId = activeBatsmanIds.find(id => id !== strikerId) ?? null;
 
@@ -93,17 +108,14 @@ export const matchRouter = router({
         ? bowlingPlayers.find((p: any) => p.id === currentBowlerId) ?? bowlingPlayers[0]
         : bowlingPlayers[0];
 
-      const strikerStats = striker ? batterStats(balls, striker.id) : { runs: 0, ballsFaced: 0 };
-      const nonStrikerStats = nonStriker ? batterStats(balls, nonStriker.id) : { runs: 0, ballsFaced: 0 };
+      const strikerStat = striker ? batterStats(balls, striker.id) : { runs: 0, ballsFaced: 0 };
+      const nonStrikerStat = nonStriker ? batterStats(balls, nonStriker.id) : { runs: 0, ballsFaced: 0 };
       const bowlerStat = bowler ? bowlerStats(balls, bowler.id) : { wickets: 0, runs: 0, overs: '0.0' };
 
       const legalCount = validBalls;
       const ballsInCurrentOver = legalCount % 6;
-      const currentOverBalls = ballsInCurrentOver > 0
-        ? balls.slice(-ballsInCurrentOver)
-        : (legalCount > 0 ? [] : balls.slice(0));
+      const currentOverBalls = ballsInCurrentOver > 0 ? balls.slice(-ballsInCurrentOver) : [];
 
-      // For innings 2: get first innings total as target
       let target: number | null = null;
       if (currentInnings && currentInnings.inningsNumber === 2) {
         const firstInnings = await ctx.prisma.innings.findFirst({
@@ -112,6 +124,12 @@ export const matchRouter = router({
         });
         target = firstInnings ? firstInnings.totalRuns + 1 : null;
       }
+
+      // Shot data for wagon wheel (last 30 balls)
+      const shotData = balls
+        .filter((b: any) => b.fieldAngle !== null && b.fieldAngle !== undefined)
+        .slice(-30)
+        .map((b: any) => ({ runs: b.runs, fieldAngle: b.fieldAngle, shotType: b.shotType }));
 
       return {
         id: match.id,
@@ -124,6 +142,7 @@ export const matchRouter = router({
         overs: match.overs,
         ballType: match.ballType,
         groundName: match.groundName,
+        createdById: match.createdById,
         score: { runs: totalRuns, wickets: totalWickets, balls: validBalls },
         inningsId: currentInnings?.id ?? null,
         inningsNumber: currentInnings?.inningsNumber ?? 1,
@@ -132,10 +151,10 @@ export const matchRouter = router({
         bowlingTeamId,
         target,
         striker: striker
-          ? { name: striker.name, runs: strikerStats.runs, balls: (strikerStats as any).ballsFaced, id: striker.id }
+          ? { name: striker.name, runs: strikerStat.runs, balls: (strikerStat as any).ballsFaced, id: striker.id }
           : { name: 'Batter 1', runs: 0, balls: 0, id: '' },
         nonStriker: nonStriker
-          ? { name: nonStriker.name, runs: nonStrikerStats.runs, balls: (nonStrikerStats as any).ballsFaced, id: nonStriker.id }
+          ? { name: nonStriker.name, runs: nonStrikerStat.runs, balls: (nonStrikerStat as any).ballsFaced, id: nonStriker.id }
           : { name: 'Batter 2', runs: 0, balls: 0, id: '' },
         bowler: bowler
           ? { name: bowler.name, wickets: bowlerStat.wickets, runs: bowlerStat.runs, overs: bowlerStat.overs, id: bowler.id }
@@ -148,10 +167,11 @@ export const matchRouter = router({
         notYetBatted: notYetBatted.map(p => ({ id: p.id, name: p.name })),
         dismissedIds: Array.from(dismissedIds),
         ballsInCurrentOver,
+        shotData,
       };
     }),
 
-  // ─── Get full scorecard ───────────────────────────────────────────────────
+  // ─── Full scorecard ───────────────────────────────────────────────────────
   getScorecard: publicProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ input, ctx }) => {
@@ -163,26 +183,25 @@ export const matchRouter = router({
           matchPlayers: true,
           innings: {
             orderBy: { inningsNumber: 'asc' },
-            include: {
-              balls: { where: { deletedAt: null }, orderBy: { timestamp: 'asc' } }
-            }
+            include: { balls: { where: { deletedAt: null }, orderBy: { timestamp: 'asc' } } }
           }
         }
       });
-      if (!match) throw new Error("Match not found");
+      if (!match) throw new Error('Match not found');
 
       return match.innings.map((innings: any) => {
         const balls: any[] = innings.balls;
         const battingTeamId = innings.teamId;
         const battingTeam = match.homeTeam.id === battingTeamId ? match.homeTeam : match.awayTeam;
         const bowlingTeam = match.homeTeam.id === battingTeamId ? match.awayTeam : match.homeTeam;
-
         const battingPlayers = match.matchPlayers.filter((p: any) => p.teamId === battingTeamId);
         const bowlingPlayers = match.matchPlayers.filter((p: any) => p.teamId !== battingTeamId);
 
         const batting = battingPlayers.map((p: any) => {
           const stats = batterStats(balls, p.id);
-          return { id: p.id, name: p.name, ...stats };
+          const shots = balls.filter(b => b.batsmanId === p.id && b.fieldAngle != null)
+            .map(b => ({ runs: b.runs, fieldAngle: b.fieldAngle, shotType: b.shotType }));
+          return { id: p.id, name: p.name, ...stats, shots };
         }).filter((p: any) => p.ballsFaced > 0 || p.runs > 0);
 
         const bowling = bowlingPlayers.map((p: any) => {
@@ -219,19 +238,13 @@ export const matchRouter = router({
       overs: z.number(),
       ballType: z.string(),
       location: z.string().optional(),
-      // Selected member IDs from each team (TeamMember IDs)
       homePlayerIds: z.array(z.string()).min(1),
       awayPlayerIds: z.array(z.string()).min(1),
     }))
     .mutation(async ({ input, ctx }) => {
-      // Fetch the selected members
       const [homeMembers, awayMembers] = await Promise.all([
-        ctx.prisma.teamMember.findMany({
-          where: { id: { in: input.homePlayerIds }, teamId: input.homeTeamId }
-        }),
-        ctx.prisma.teamMember.findMany({
-          where: { id: { in: input.awayPlayerIds }, teamId: input.awayTeamId }
-        }),
+        ctx.prisma.teamMember.findMany({ where: { id: { in: input.homePlayerIds }, teamId: input.homeTeamId } }),
+        ctx.prisma.teamMember.findMany({ where: { id: { in: input.awayPlayerIds }, teamId: input.awayTeamId } }),
       ]);
 
       const battingTeamId = input.tossDecision === 'BAT'
@@ -249,25 +262,11 @@ export const matchRouter = router({
           groundName: input.location,
           status: 'LIVE',
           createdById: ctx.session.user.id,
-          innings: {
-            create: { teamId: battingTeamId, inningsNumber: 1 }
-          },
+          innings: { create: { teamId: battingTeamId, inningsNumber: 1 } },
           matchPlayers: {
             create: [
-              ...homeMembers.map(m => ({
-                teamId: input.homeTeamId,
-                name: m.name,
-                userId: m.userId ?? undefined,
-                jerseyNo: m.jerseyNo ?? undefined,
-                isPlaying: true,
-              })),
-              ...awayMembers.map(m => ({
-                teamId: input.awayTeamId,
-                name: m.name,
-                userId: m.userId ?? undefined,
-                jerseyNo: m.jerseyNo ?? undefined,
-                isPlaying: true,
-              })),
+              ...homeMembers.map(m => ({ teamId: input.homeTeamId, name: m.name, userId: m.userId ?? undefined, jerseyNo: m.jerseyNo ?? undefined, isPlaying: true })),
+              ...awayMembers.map(m => ({ teamId: input.awayTeamId, name: m.name, userId: m.userId ?? undefined, jerseyNo: m.jerseyNo ?? undefined, isPlaying: true })),
             ]
           }
         }
@@ -301,8 +300,7 @@ export const matchRouter = router({
       const ball = await ctx.prisma.ballByBall.create({
         data: {
           inningsId: input.inningsId,
-          overNumber,
-          ballNumber,
+          overNumber, ballNumber,
           batsmanId: input.batsmanId,
           bowlerId: input.bowlerId,
           runs: input.runs,
@@ -318,7 +316,7 @@ export const matchRouter = router({
       let totalRunsToAdd = input.runs;
       if (input.isWide || input.isNoBall) totalRunsToAdd += 1;
 
-      await ctx.prisma.innings.update({
+      const updatedInnings = await ctx.prisma.innings.update({
         where: { id: input.inningsId },
         data: {
           totalRuns: { increment: totalRunsToAdd },
@@ -326,20 +324,70 @@ export const matchRouter = router({
         }
       });
 
-      const displayStr = input.isWicket ? 'W' : (input.isWide ? 'wd' : (input.isNoBall ? 'nb' : input.runs.toString()));
-      try {
-        await pusherServer.trigger(`match-${input.matchId}`, 'score-update', {
-          ball: displayStr,
-          runsAdded: totalRunsToAdd,
-          isWicket: input.isWicket,
-          overNumber,
-          ballNumber,
-        });
-      } catch (err) {
-        console.error('Pusher trigger failed:', err);
+      // ── Notifications ──────────────────────────────────────────────────────
+      const match = await ctx.prisma.match.findUnique({
+        where: { id: input.matchId },
+        select: {
+          createdById: true,
+          homeTeam: { select: { name: true } },
+          awayTeam: { select: { name: true } }
+        }
+      });
+
+      if (match?.createdById) {
+        const uid = match.createdById;
+        const scoreStr = `${updatedInnings.totalRuns}/${updatedInnings.totalWickets}`;
+
+        if (input.isWicket) {
+          const dismissal = (input.dismissalType ?? 'OUT').replace(/_/g, ' ');
+          await pushNotification(ctx.prisma, uid, '🏏 WICKET!',
+            `${dismissal} — Score: ${scoreStr}`, 'WICKET');
+        }
+        if (!input.isWicket && !input.isWide && !input.isNoBall) {
+          if (input.runs === 6) {
+            await pushNotification(ctx.prisma, uid, '💥 SIX!', `Score: ${scoreStr}`, 'BOUNDARY');
+          } else if (input.runs === 4) {
+            await pushNotification(ctx.prisma, uid, '🔥 FOUR!', `Score: ${scoreStr}`, 'BOUNDARY');
+          }
+          // Batting milestone check
+          const batterTotal = await ctx.prisma.ballByBall.aggregate({
+            where: { inningsId: input.inningsId, batsmanId: input.batsmanId, deletedAt: null, isWide: false, isNoBall: false },
+            _sum: { runs: true }
+          });
+          const totalRuns = batterTotal._sum.runs ?? 0;
+          const prevTotal = totalRuns - input.runs;
+          if (totalRuns >= 100 && prevTotal < 100) {
+            await pushNotification(ctx.prisma, uid, '🌟 CENTURY!', `Batsman reached 100 runs`, 'MILESTONE');
+          } else if (totalRuns >= 50 && prevTotal < 50) {
+            await pushNotification(ctx.prisma, uid, '⭐ FIFTY!', `Batsman reached 50 runs`, 'MILESTONE');
+          }
+        }
       }
 
+      const displayStr = input.isWicket ? 'W' : (input.isWide ? 'wd' : (input.isNoBall ? 'nb' : input.runs.toString()));
+      await pusherServer.trigger(`match-${input.matchId}`, 'score-update', {
+        ball: displayStr, runsAdded: totalRunsToAdd, isWicket: input.isWicket, overNumber, ballNumber
+      }).catch(() => {});
+
       return { success: true, ball, overNumber, ballNumber };
+    }),
+
+  // ─── Update shot data for a ball (called after shot picker) ──────────────
+  updateBallShot: protectedProcedure
+    .input(z.object({
+      ballId: z.string(),
+      shotType: z.string().optional(),
+      fieldAngle: z.number().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const ball = await ctx.prisma.ballByBall.update({
+        where: { id: input.ballId },
+        data: {
+          ...(input.shotType !== undefined ? { shotType: input.shotType } : {}),
+          ...(input.fieldAngle !== undefined ? { fieldAngle: input.fieldAngle } : {}),
+        }
+      });
+      return { success: true, ball };
     }),
 
   // ─── Undo last ball ───────────────────────────────────────────────────────
@@ -355,11 +403,7 @@ export const matchRouter = router({
       let runsToDeduct = lastBall.runs;
       if (lastBall.isWide || lastBall.isNoBall) runsToDeduct += 1;
 
-      await ctx.prisma.ballByBall.update({
-        where: { id: lastBall.id },
-        data: { deletedAt: new Date() }
-      });
-
+      await ctx.prisma.ballByBall.update({ where: { id: lastBall.id }, data: { deletedAt: new Date() } });
       await ctx.prisma.innings.update({
         where: { id: input.inningsId },
         data: {
@@ -367,7 +411,6 @@ export const matchRouter = router({
           totalWickets: { decrement: lastBall.isWicket ? 1 : 0 },
         }
       });
-
       await pusherServer.trigger(`match-${input.matchId}`, 'score-update', { undo: true }).catch(() => {});
       return { success: true };
     }),
@@ -376,10 +419,7 @@ export const matchRouter = router({
   completeInnings: protectedProcedure
     .input(z.object({ inningsId: z.string(), matchId: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      await ctx.prisma.innings.update({
-        where: { id: input.inningsId },
-        data: { isCompleted: true }
-      });
+      await ctx.prisma.innings.update({ where: { id: input.inningsId }, data: { isCompleted: true } });
       await pusherServer.trigger(`match-${input.matchId}`, 'innings-complete', {}).catch(() => {});
       return { success: true };
     }),
@@ -395,29 +435,30 @@ export const matchRouter = router({
       if (!match) throw new Error('Match not found');
       if (match.innings.length >= 2) throw new Error('Second innings already exists');
 
-      // The bowling team in innings 1 bats in innings 2
       const firstInnings = match.innings[0];
       const battingTeamId = firstInnings.teamId === match.homeTeamId ? match.awayTeamId : match.homeTeamId;
-
       const secondInnings = await ctx.prisma.innings.create({
         data: { matchId: input.matchId, teamId: battingTeamId, inningsNumber: 2 }
       });
-
       await pusherServer.trigger(`match-${input.matchId}`, 'second-innings-started', {}).catch(() => {});
       return secondInnings;
     }),
 
   // ─── End the match ────────────────────────────────────────────────────────
   endMatch: protectedProcedure
-    .input(z.object({
-      matchId: z.string(),
-      result: z.string(), // e.g. "Team A won by 25 runs"
-    }))
+    .input(z.object({ matchId: z.string(), result: z.string() }))
     .mutation(async ({ input, ctx }) => {
       const match = await ctx.prisma.match.update({
         where: { id: input.matchId },
-        data: { status: 'COMPLETED', result: input.result }
+        data: { status: 'COMPLETED', result: input.result },
+        include: { homeTeam: true, awayTeam: true }
       });
+
+      // Notify match creator
+      if (match.createdById) {
+        await pushNotification(ctx.prisma, match.createdById, '🏆 Match Complete!', input.result, 'MATCH_END');
+      }
+
       await pusherServer.trigger(`match-${input.matchId}`, 'match-complete', { result: input.result }).catch(() => {});
       return match;
     }),

@@ -1,67 +1,139 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ─── CSS Variables ────────────────────────────────────────────── */
+/* ─── CSS Variables ─────────────────────────────────────────────────────── */
 :root {
-  --background: #FAFAF8;
-  --surface-muted: #F2EFE9;
-  --surface-card: #FFFFFF;
-  --ink: #1A1A1A;
-  --ink-secondary: #4A4540;
-  --ink-tertiary: #8A8278;
-  --border: rgba(107, 74, 42, 0.13);
-  --border-strong: rgba(107, 74, 42, 0.25);
-  --brand-red: #E8390E;
-  --brand-red-hover: #C42E09;
-  --brand-gold: #F5A623;
-  --primary: #E8390E;
-  --primary-foreground: #FFFFFF;
+  --brand: #E8390E;
+  --brand-dark: #C42E09;
+  --brand-glow: rgba(232,57,14,0.35);
+
+  --surface-0: #0A0A0A;
+  --surface-1: #111111;
+  --surface-2: #1A1A1A;
+  --surface-3: #222222;
+
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.15);
+
+  --ink: #FFFFFF;
+  --ink-2: rgba(255,255,255,0.60);
+  --ink-3: rgba(255,255,255,0.35);
+  --ink-4: rgba(255,255,255,0.15);
 }
 
-/* ─── Reset & Base ─────────────────────────────────────────────── */
+/* ─── Reset & Base ──────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { font-size: 16px; -webkit-font-smoothing: antialiased; }
-
-body {
-  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
-  background-color: var(--background);
-  color: var(--ink);
-  line-height: 1.5;
-  overscroll-behavior: none;
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent iOS text size adjust on rotation */
+  -webkit-text-size-adjust: 100%;
+  /* Smooth native scrolling */
+  scroll-behavior: smooth;
 }
 
-/* ─── Scrollbar ────────────────────────────────────────────────── */
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--surface-0);
+  color: var(--ink);
+  line-height: 1.5;
+  /* Prevent rubber-band bounce on iOS */
+  overscroll-behavior: none;
+  /* Full-height */
+  min-height: 100dvh;
+  /* Native feel: no blue selection flash on touch */
+  -webkit-tap-highlight-color: transparent;
+  /* Prevent accidental text selection during swipes */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection where needed */
+p, span, h1, h2, h3, h4, input, textarea { -webkit-user-select: text; user-select: text; }
+
+/* ─── Scrollbars ────────────────────────────────────────────────────────── */
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 
-/* ─── Safe area padding ────────────────────────────────────────── */
-.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
-.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+/* Native-feel momentum scrolling */
+.scroll-native { -webkit-overflow-scrolling: touch; }
 
-/* ─── Mono Font ────────────────────────────────────────────────── */
-.font-mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+/* ─── Safe Area Utilities ───────────────────────────────────────────────── */
+.pb-safe  { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.pt-safe  { padding-top: env(safe-area-inset-top, 0px); }
+.pl-safe  { padding-left: env(safe-area-inset-left, 0px); }
+.pr-safe  { padding-right: env(safe-area-inset-right, 0px); }
 
-/* ─── Utility ──────────────────────────────────────────────────── */
+.pt-status { padding-top: max(env(safe-area-inset-top, 0px), 44px); }
+.mb-nav    { margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 64px); }
+
+/* ─── Monospace Font ────────────────────────────────────────────────────── */
+.font-mono { font-family: 'JetBrains Mono', 'Cascadia Code', monospace; }
+
+/* ─── Input Reset ───────────────────────────────────────────────────────── */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
-/* Prevent FOUC on page transitions */
-html { scroll-behavior: smooth; }
-
-/* Tap highlight removal */
-* { -webkit-tap-highlight-color: transparent; }
-
-/* Input autofill color fix */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 30px var(--surface-muted) inset !important;
-  -webkit-text-fill-color: var(--ink) !important;
+  -webkit-box-shadow: 0 0 0 30px #111 inset !important;
+  -webkit-text-fill-color: #fff !important;
+  caret-color: #fff;
 }
 
-/* ─── Framer Motion performance hint ──────────────────────────── */
-.motion-safe { will-change: transform; }
+/* ─── Glass Card Utility ────────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.glass-card-strong {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+}
+
+/* ─── Glow Utilities ────────────────────────────────────────────────────── */
+.glow-brand  { box-shadow: 0 0 30px var(--brand-glow); }
+.glow-brand-lg { box-shadow: 0 0 60px var(--brand-glow), 0 0 120px rgba(232,57,14,0.15); }
+
+/* ─── Bottom Nav Blur ───────────────────────────────────────────────────── */
+.bottom-nav-bg {
+  background: rgba(10,10,10,0.85);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+}
+
+/* ─── Touch button feedback ─────────────────────────────────────────────── */
+.btn-native {
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ─── Performance hint for animated elements ────────────────────────────── */
+.gpu { will-change: transform; transform: translateZ(0); }
+
+/* ─── Live dot pulse ────────────────────────────────────────────────────── */
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+.live-dot { animation: live-pulse 1.4s ease-in-out infinite; }
+
+/* ─── Score pop animation ───────────────────────────────────────────────── */
+@keyframes score-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+.score-pop { animation: score-pop 0.25s ease-out; }
