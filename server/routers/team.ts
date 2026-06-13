@@ -174,8 +174,15 @@ export const teamRouter = router({
 
   // ── Search teams by name ───────────────────────────────────────
   search: publicProcedure
-    .input(z.object({ query: z.string().min(1) }))
+    .input(z.object({ query: z.string().optional() }))
     .query(async ({ input, ctx }) => {
+      if (!input?.query) {
+        return ctx.prisma.team.findMany({
+          include: { members: { select: { id: true } } },
+          take: 20,
+          orderBy: { createdAt: 'asc' },
+        });
+      }
       return ctx.prisma.team.findMany({
         where: { name: { contains: input.query, mode: 'insensitive' } },
         include: { members: { select: { id: true } } },

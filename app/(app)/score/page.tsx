@@ -37,8 +37,8 @@ function TeamPicker({ label, value, onSelect }: {
   const [query, setQuery] = useState("");
   const { data: session } = useSession();
   const { data: myTeams } = trpc.team.getMyTeams.useQuery(undefined, { enabled: !!session?.user });
-  const { data: searchResults } = trpc.team.search.useQuery({ query }, { enabled: query.length > 1 });
-  const teams = query.length > 1 ? searchResults : myTeams;
+  const { data: searchResults, isFetching } = trpc.team.search.useQuery({ query: query || undefined });
+  const teams = query.length > 0 ? searchResults : (searchResults || myTeams);
 
   return (
     <div>
@@ -97,14 +97,21 @@ function TeamPicker({ label, value, onSelect }: {
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                     placeholder="Search teams by name…"
-                    className="w-full bg-white/8 rounded-xl py-3 pl-9 pr-4 text-sm text-white placeholder:text-white/30 focus:outline-none focus:bg-white/12 transition-colors"
+                    className="w-full bg-transparent border border-white/10 focus:border-[#E8390E] rounded-xl py-3 pl-9 pr-4 text-sm text-white placeholder:text-white/30 focus:outline-none transition-colors"
                   />
+                  {isFetching && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#E8390E]/30 border-t-[#E8390E] rounded-full animate-spin" />
+                  )}
                 </div>
               </div>
-              <div className="overflow-y-auto flex-1 p-4 space-y-2">
-                {!teams || teams.length === 0 ? (
-                  <p className="text-white/30 text-sm text-center py-8">No teams found</p>
-                ) : (teams as TeamRef[]).map(t => (
+                <div className="overflow-y-auto flex-1 p-4 space-y-2">
+                  {!teams ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="w-6 h-6 border-2 border-white/10 border-t-[#E8390E] rounded-full animate-spin" />
+                    </div>
+                  ) : teams.length === 0 ? (
+                    <p className="text-white/30 text-sm text-center py-8">No teams found</p>
+                  ) : (teams as TeamRef[]).map(t => (
                   <motion.button
                     key={t.id}
                     whileTap={{ scale: 0.97 }}

@@ -57,7 +57,7 @@ function EditProfileSheet({ isOpen, currentName, currentCity, onClose, onSave, i
             className="fixed inset-0 bg-black z-40" onClick={onClose} />
           <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 p-6 pb-10 shadow-2xl">
+            className="fixed bottom-0 left-0 right-0 bg-transparent rounded-t-3xl z-50 p-6 pb-10 shadow-2xl">
             <div className="w-10 h-1 bg-[rgba(107,74,42,0.2)] rounded-full mx-auto mb-6" />
             <h3 className="font-bold text-[#1A1A1A] text-lg mb-5">Edit Profile</h3>
             <div className="space-y-4">
@@ -147,12 +147,12 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
 
         <div className="flex justify-between items-center mb-6 relative z-10">
           <motion.button whileTap={{ scale: 0.9 }} onClick={() => router.back()}
-            className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white">
+            className="w-10 h-10 bg-transparent/10 rounded-xl flex items-center justify-center text-white">
             <ArrowLeft className="w-5 h-5" />
           </motion.button>
           {isOwnProfile && (
             <button onClick={() => setShowEdit(true)}
-              className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-white">
+              className="w-10 h-10 bg-transparent/10 rounded-xl flex items-center justify-center text-white">
               <Edit2 className="w-4 h-4" />
             </button>
           )}
@@ -197,7 +197,7 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
             { label: "Teams", val: teams.length || "—" },
           ].map((s, i) => (
             <div key={i} className="flex items-center gap-5">
-              {i > 0 && <div className="w-px h-8 bg-white/10" />}
+              {i > 0 && <div className="w-px h-8 bg-transparent/10" />}
               <div className="text-center">
                 <p className="text-white font-bold text-base">{s.val}</p>
                 <p className="text-white/40 text-[10px] uppercase tracking-wide">{s.label}</p>
@@ -216,7 +216,7 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
             <div className="flex gap-2.5 overflow-x-auto hide-scrollbar -mx-4 px-4 pb-1">
               {teams.map((tm: any) => (
                 <Link key={tm.id} href={`/teams/${tm.team.id}`} className="shrink-0">
-                  <div className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-3 flex items-center gap-2.5 min-w-[160px] shadow-sm">
+                  <div className="glass-card border border-[rgba(107,74,42,0.13)] rounded-2xl p-3 flex items-center gap-2.5 min-w-[160px] shadow-sm">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white text-xs shrink-0"
                       style={{ backgroundColor: tm.team.colorHex }}>{tm.team.shortName}</div>
                     <div className="min-w-0">
@@ -231,7 +231,7 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
         )}
 
         {/* ── Batting Stats ── */}
-        <section className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 shadow-sm">
+        <section className="glass-card border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 shadow-sm">
           <SectionHeader icon={<Target className="w-4 h-4 text-[#E8390E]" />} title="Batting" />
           {!hasBatting ? (
             <div className="py-6 text-center">
@@ -263,7 +263,7 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
         </section>
 
         {/* ── Bowling Stats ── */}
-        <section className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 shadow-sm">
+        <section className="glass-card border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 shadow-sm">
           <SectionHeader icon={<Zap className="w-4 h-4 text-amber-500" />} title="Bowling" />
           {!hasBowling ? (
             <div className="py-6 text-center">
@@ -291,13 +291,13 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
 
         {/* ── Achievements ── */}
         {awards && awards.length > 0 && (
-          <section className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 shadow-sm">
+          <section className="glass-card border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 shadow-sm">
             <SectionHeader icon={<Award className="w-4 h-4 text-amber-500" />} title="Achievements" />
             <div className="grid grid-cols-2 gap-2">
               {awards.map((a: any) => (
-                <div key={a.id} className="bg-amber-50 border border-amber-100 rounded-xl p-3">
-                  <p className="font-semibold text-xs text-amber-800">{a.title}</p>
-                  <p className="text-[10px] text-amber-600 mt-0.5">{a.description}</p>
+                <div key={a.id} className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+                  <p className="font-semibold text-xs text-amber-400">{a.title}</p>
+                  <p className="text-[10px] text-amber-500/80 mt-0.5">{a.description}</p>
                 </div>
               ))}
             </div>
@@ -313,7 +313,7 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
             <div className="space-y-2">
               {recentMatches.map((m: any, i: number) => (
                 <Link key={i} href={`/match/${m.matchId}`}>
-                  <div className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 flex items-center gap-3 hover:border-[rgba(107,74,42,0.25)] transition-colors shadow-sm">
+                  <div className="glass-card border border-[rgba(107,74,42,0.13)] rounded-2xl p-4 flex items-center gap-3 hover:border-[rgba(107,74,42,0.25)] transition-colors shadow-sm">
                     <div className="w-10 h-10 bg-[#F2EFE9] rounded-xl flex items-center justify-center text-lg shrink-0">🏏</div>
                     <div className="flex-1">
                       <p className="font-semibold text-sm text-[#1A1A1A]">
@@ -326,8 +326,8 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
                       </p>
                     </div>
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
-                      m.status === "LIVE" ? "bg-red-50 text-red-700 border border-red-200" :
-                      m.status === "COMPLETED" ? "bg-[#F2EFE9] text-[#4A4540]" : "bg-blue-50 text-blue-700"
+                      m.status === "LIVE" ? "bg-[#E8390E]/15 text-[#E8390E] border border-[#E8390E]/20" :
+                      m.status === "COMPLETED" ? "bg-[#F2EFE9] text-[#4A4540]" : "bg-blue-500/15 text-blue-400"
                     }`}>
                       {m.status === "LIVE" ? "● LIVE" : m.status}
                     </span>
@@ -341,7 +341,7 @@ export default function ProfilePage({ params }: { params: { id: string } }) {
 
         {/* ── Empty state ── */}
         {batting.matches === 0 && bowling.wickets === 0 && (!recentMatches || recentMatches.length === 0) && teams.length === 0 && (
-          <div className="bg-white border border-[rgba(107,74,42,0.13)] rounded-2xl p-8 text-center shadow-sm">
+          <div className="glass-card border border-[rgba(107,74,42,0.13)] rounded-2xl p-8 text-center shadow-sm">
             <div className="text-5xl mb-4">🏏</div>
             <p className="font-bold text-[#1A1A1A] mb-2">Profile is fresh!</p>
             <p className="text-sm text-[#8A8278] mb-5">Create a team and score your first match to build your cricket profile.</p>

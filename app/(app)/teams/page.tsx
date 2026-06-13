@@ -42,7 +42,7 @@ export default function TeamsPage() {
   return (
     <div className="min-h-screen bg-[#FAFAF8] pb-28">
       {/* Header */}
-      <div className="bg-white border-b border-[rgba(107,74,42,0.13)] px-5 pt-12 pb-4 flex items-center justify-between">
+      <div className="glass-card border-b border-[rgba(107,74,42,0.13)] px-5 pt-12 pb-4 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#1A1A1A]">My Teams</h1>
           <p className="text-sm text-[#8A8278] mt-0.5">{teams?.length ?? 0} team{teams?.length !== 1 ? "s" : ""}</p>
@@ -60,7 +60,7 @@ export default function TeamsPage() {
       <div className="px-4 pt-5 space-y-3">
         {isLoading ? (
           [...Array(3)].map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-[rgba(107,74,42,0.13)] p-4 h-20 animate-pulse" />
+            <div key={i} className="bg-transparent rounded-2xl border border-[rgba(107,74,42,0.13)] p-4 h-20 animate-pulse" />
           ))
         ) : !teams || teams.length === 0 ? (
           <motion.div
@@ -90,7 +90,7 @@ export default function TeamsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
                 whileTap={{ scale: 0.98 }}
-                className="bg-white rounded-2xl border border-[rgba(107,74,42,0.13)] p-4 flex items-center gap-4 hover:border-[rgba(107,74,42,0.25)] transition-colors"
+                className="bg-transparent rounded-2xl border border-[rgba(107,74,42,0.13)] p-4 flex items-center gap-4 hover:border-[rgba(107,74,42,0.25)] transition-colors"
               >
                 <TeamColorBadge color={team.colorHex} shortName={team.shortName} />
                 <div className="flex-1 min-w-0">
@@ -123,7 +123,7 @@ export default function TeamsPage() {
           <Link href="/teams/new">
             <motion.div
               whileTap={{ scale: 0.98 }}
-              className="bg-white rounded-2xl border-2 border-dashed border-[rgba(107,74,42,0.2)] p-4 flex items-center justify-center gap-2 text-[#8A8278] hover:border-[#E8390E] hover:text-[#E8390E] transition-colors mt-2"
+              className="bg-transparent rounded-2xl border-2 border-dashed border-[rgba(107,74,42,0.2)] p-4 flex items-center justify-center gap-2 text-[#8A8278] hover:border-[#E8390E] hover:text-[#E8390E] transition-colors mt-2"
             >
               <Plus className="w-4 h-4" />
               <span className="text-sm font-medium">Create Another Team</span>
