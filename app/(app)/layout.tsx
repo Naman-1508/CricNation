@@ -31,9 +31,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const hideNav = pathname.startsWith("/score/");
 
   return (
-    <div className="flex flex-col bg-[#0A0A0A]" style={{ height: "100dvh" }}>
+    <div className="flex flex-col bg-[#0A0A0A] h-[100dvh] w-full overflow-hidden">
       <main
-        className="flex-1 overflow-y-auto scroll-native hide-scrollbar"
+        className="flex-1 overflow-y-auto scroll-native hide-scrollbar pb-[calc(env(safe-area-inset-bottom,0px)+96px)]"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
         {children}
@@ -78,8 +78,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             initial={{ y: 100 }}
             animate={{ y: 0, transition: { type: "spring", stiffness: 380, damping: 36 } }}
             exit={{ y: 100 }}
-            className="fixed bottom-0 left-0 right-0 z-40 bottom-nav-bg border-t border-white/8"
-            style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+            className="fixed bottom-0 left-0 right-0 z-40 bottom-nav-bg border-t border-white/8 pb-safe"
           >
             <div className="flex items-center h-16 px-2">
               {NAV_ITEMS.map((item) => {

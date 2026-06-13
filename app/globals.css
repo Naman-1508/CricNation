@@ -76,6 +76,11 @@ p, span, h1, h2, h3, h4, input, textarea { -webkit-user-select: text; user-selec
 .font-mono { font-family: 'JetBrains Mono', 'Cascadia Code', monospace; }
 
 /* ─── Input Reset ───────────────────────────────────────────────────────── */
+/* Force 16px on mobile to prevent iOS Safari auto-zoom on focus */
+input, textarea, select {
+  font-size: 16px !important;
+}
+
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
