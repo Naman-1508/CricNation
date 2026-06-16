@@ -36,7 +36,7 @@ function TeamPicker({ label, value, onSelect }: {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const { data: session } = useSession();
-  const { data: myTeams } = trpc.team.getMyTeams.useQuery(undefined, { enabled: !!session?.user });
+  const { data: myTeams } = trpc.team.getMyTeams.useQuery(undefined, { enabled: !!session?.user?.id });
   const { data: searchResults, isFetching } = trpc.team.search.useQuery({ query: query || undefined });
   const teams = query.length > 0 ? searchResults : (searchResults || myTeams);
 

@@ -17,21 +17,24 @@ const fadeUp = (delay = 0) => ({
   animate: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 280, damping: 26, delay } },
 });
 
-// ── Landing Page ───────────────────────────────────────────────────────────
+// ── Landing Page (Unauthenticated) ─────────────────────────────────────────
 function LandingPage() {
   return (
     <div className="min-h-[100dvh] bg-[#0A0A0A] text-white relative overflow-hidden flex flex-col">
-      {/* Ambient lights */}
-      <motion.div
-        animate={{ scale: [1, 1.12, 1], opacity: [0.25, 0.45, 0.25] }}
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-0 right-0 w-[70vw] h-[70vw] max-w-[500px] max-h-[500px] bg-[#E8390E]/20 rounded-full blur-[120px] pointer-events-none translate-x-1/3 -translate-y-1/4"
-      />
-      <motion.div
-        animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.3, 0.15] }}
-        transition={{ duration: 11, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        className="absolute bottom-0 left-0 w-[60vw] h-[60vw] max-w-[400px] max-h-[400px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none -translate-x-1/3 translate-y-1/4"
-      />
+      
+      {/* ── Stadium Floodlights ── */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden flex justify-center z-0">
+        <div className="absolute top-0 left-1/4 w-40 h-[150vh] bg-gradient-to-b from-white/20 via-white/5 to-transparent floodlight-l blur-3xl mix-blend-overlay" />
+        <div className="absolute top-0 right-1/4 w-40 h-[150vh] bg-gradient-to-b from-white/20 via-white/5 to-transparent floodlight-r blur-3xl mix-blend-overlay" />
+        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#E8390E]/20 to-transparent blur-3xl" />
+      </div>
+
+      {/* ── Animated Pitch Lines ── */}
+      <div className="absolute inset-0 pointer-events-none z-0 opacity-10">
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[400px] h-[200vh] border-x-2 border-white/30 transform perspective-[1000px] rotateX(60deg) origin-bottom">
+          <div className="w-full h-[5px] bg-white/50 pitch-scanner" />
+        </div>
+      </div>
 
       {/* Nav */}
       <nav className="flex items-center justify-between px-6 pt-safe py-4 relative z-10">
@@ -39,13 +42,13 @@ function LandingPage() {
           <div className="w-9 h-9 bg-gradient-to-br from-[#E8390E] to-[#C42E09] rounded-xl flex items-center justify-center text-base shadow-lg">
             🏏
           </div>
-          <span className="text-lg font-black tracking-tight">CricNation</span>
+          <span className="text-xl font-black tracking-tighter uppercase italic">CricNation</span>
         </motion.div>
         <motion.div {...fadeUp(0.1)}>
           <Link href="/login">
             <motion.button
               whileTap={{ scale: 0.93 }}
-              className="glass-card px-5 py-2 rounded-full text-sm font-semibold text-white btn-native"
+              className="bg-white/10 backdrop-blur-md border border-white/20 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-white hover:bg-white/20 transition-colors"
             >
               Sign In
             </motion.button>
@@ -55,69 +58,45 @@ function LandingPage() {
 
       {/* Hero */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 text-center relative z-10 pt-8 pb-24">
+        
+        {/* Live Indicator */}
         <motion.div {...fadeUp(0.1)}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E8390E]/10 border border-[#E8390E]/25 text-xs font-bold text-[#E8390E] mb-8"
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#E8390E]/15 border border-[#E8390E]/30 text-[10px] font-black uppercase tracking-widest text-[#E8390E] mb-8 shadow-[0_0_20px_rgba(232,57,14,0.3)]"
         >
           <span className="w-1.5 h-1.5 bg-[#E8390E] rounded-full live-dot" />
-          Live Ball-by-Ball Scoring
+          Live Match Broadcasting
         </motion.div>
 
-        <motion.h1 {...fadeUp(0.15)} className="text-5xl md:text-7xl font-black tracking-tight leading-[1.1] mb-5">
-          Score like a<br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E8390E] via-amber-400 to-yellow-300">
-            Professional.
+        {/* Floating Cricket Ball */}
+        <motion.div {...fadeUp(0.12)} className="relative mb-6">
+          <div className="w-20 h-20 bg-[#E8390E] rounded-full shadow-[inset_-4px_-4px_10px_rgba(0,0,0,0.5),0_0_40px_rgba(232,57,14,0.6)] flex items-center justify-center mx-auto cricket-float">
+            <div className="absolute inset-1 border-2 border-dashed border-white/40 rounded-full seam-spin" />
+            <span className="font-bold text-white/90 text-2xl drop-shadow-md relative z-10">CN</span>
+          </div>
+        </motion.div>
+
+        <motion.h1 {...fadeUp(0.15)} className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-6 uppercase italic">
+          Step Up To<br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-300 to-gray-500">
+            The Crease
           </span>
         </motion.h1>
 
-        <motion.p {...fadeUp(0.2)} className="text-white/50 text-base md:text-lg max-w-sm mx-auto mb-10 leading-relaxed">
-          Real-time cricket scoring with wagon wheel analytics, team management and live broadcast.
+        <motion.p {...fadeUp(0.2)} className="text-white/40 font-medium text-sm md:text-base max-w-sm mx-auto mb-10 leading-relaxed uppercase tracking-wider">
+          Pro-level scoring, live wagon wheels, and broadcast-quality graphics for your local matches.
         </motion.p>
 
-        <motion.div {...fadeUp(0.25)} className="flex flex-col gap-3 w-full max-w-xs">
-          <Link href="/login" className="w-full">
+        <motion.div {...fadeUp(0.25)} className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+          <Link href="/login" className="flex-1">
             <motion.button
               whileTap={{ scale: 0.96 }}
-              className="w-full bg-gradient-to-r from-[#E8390E] to-[#C42E09] text-white py-4 rounded-2xl font-bold text-base glow-brand btn-native"
+              className="w-full bg-gradient-to-r from-[#E8390E] to-[#C42E09] text-white py-5 rounded-2xl font-black text-base uppercase tracking-wider glow-brand shadow-[0_0_40px_rgba(232,57,14,0.4)] border border-[#E8390E]/50"
             >
-              Get Started Free
-            </motion.button>
-          </Link>
-          <Link href="/login" className="w-full">
-            <motion.button
-              whileTap={{ scale: 0.96 }}
-              className="w-full glass-card text-white py-4 rounded-2xl font-semibold text-base btn-native"
-            >
-              Explore Matches
+              Take The Field
             </motion.button>
           </Link>
         </motion.div>
 
-        {/* Feature cards */}
-        <motion.div
-          initial="hidden" animate="show"
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.35 } } }}
-          className="grid grid-cols-1 gap-4 w-full max-w-sm mt-16"
-        >
-          {[
-            { icon: Zap, title: "Real-Time WebSockets", desc: "Every ball syncs to all spectators instantly.", accent: "text-blue-400", bg: "bg-blue-500/15" },
-            { icon: TrendingUp, title: "Wagon Wheel Analytics", desc: "Shot tracking and field placement per batsman.", accent: "text-emerald-400", bg: "bg-emerald-500/15" },
-            { icon: Trophy, title: "Tournament Manager", desc: "Auto-fixtures, NRR, points table—fully automated.", accent: "text-amber-400", bg: "bg-amber-500/15" },
-          ].map((f) => (
-            <motion.div
-              key={f.title}
-              variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
-              className="glass-card rounded-2xl p-4 flex items-start gap-3 text-left"
-            >
-              <div className={`w-10 h-10 ${f.bg} rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                <f.icon className={`w-5 h-5 ${f.accent}`} />
-              </div>
-              <div>
-                <p className="font-bold text-sm text-white mb-0.5">{f.title}</p>
-                <p className="text-xs text-white/40 leading-relaxed">{f.desc}</p>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
       </main>
     </div>
   );
@@ -130,10 +109,13 @@ function Skeleton({ className }: { className?: string }) {
   );
 }
 
-// ── Dashboard ──────────────────────────────────────────────────────────────
+// ── Dashboard (Authenticated) ──────────────────────────────────────────────
 function Dashboard({ session }: { session: any }) {
   const { data: tournaments, isLoading: loadingT } = trpc.tournament.getAll.useQuery();
-  const { data: myTeams, isLoading: loadingTeams } = trpc.team.getMyTeams.useQuery();
+  const { data: myTeams, isLoading: loadingTeams } = trpc.team.getMyTeams.useQuery(
+    undefined,
+    { enabled: !!session?.user?.id }
+  );
   const [greeting, setGreeting] = useState("Hey");
   const [location, setLocation] = useState<string | null>(null);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -445,6 +427,16 @@ export default function HomePage() {
     return (
       <div className="min-h-[100dvh] bg-[#0A0A0A] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-white/15 border-t-[#E8390E] rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (status === "authenticated" && !session?.user?.id) {
+    return (
+      <div className="min-h-[100dvh] bg-[#0A0A0A] flex flex-col items-center justify-center text-center px-4">
+        <h2 className="text-xl font-black text-white mb-2">Session Syncing...</h2>
+        <p className="text-white/40 text-sm mb-6">Please refresh the page if this takes too long.</p>
+        <button onClick={() => window.location.reload()} className="px-6 py-2 bg-white/10 rounded-xl text-white text-sm font-bold">Refresh</button>
       </div>
     );
   }

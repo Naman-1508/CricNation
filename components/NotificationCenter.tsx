@@ -26,7 +26,7 @@ export function NotificationBell({ onOpen }: { onOpen: () => void }) {
   const { data: session } = useSession();
   const { data: count = 0, refetch } = trpc.notification.getUnreadCount.useQuery(
     undefined,
-    { enabled: !!session?.user, refetchInterval: false }
+    { enabled: !!session?.user?.id, refetchInterval: false }
   );
   const [liveCount, setLiveCount] = useState(0);
 

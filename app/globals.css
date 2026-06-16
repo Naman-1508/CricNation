@@ -197,3 +197,30 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
   to   { transform: rotate(360deg); }
 }
 .seam-spin { animation: seam-spin 1.2s linear infinite; }
+
+/* ─── Hardcore Cricket Stadium Effects ───────────────────────────────────── */
+@keyframes floodlight-sweep-left {
+  0%, 100% { transform: rotate(-15deg) scaleY(1); opacity: 0.1; }
+  50%      { transform: rotate(25deg) scaleY(1.3); opacity: 0.3; }
+}
+@keyframes floodlight-sweep-right {
+  0%, 100% { transform: rotate(15deg) scaleY(1); opacity: 0.1; }
+  50%      { transform: rotate(-25deg) scaleY(1.3); opacity: 0.3; }
+}
+.floodlight-l {
+  transform-origin: top left;
+  animation: floodlight-sweep-left 8s ease-in-out infinite;
+}
+.floodlight-r {
+  transform-origin: top right;
+  animation: floodlight-sweep-right 10s ease-in-out infinite;
+}
+
+@keyframes pitch-scan {
+  0% { transform: translateY(-100%); opacity: 0; }
+  50% { opacity: 0.2; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+.pitch-scanner {
+  animation: pitch-scan 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}

@@ -29,7 +29,7 @@ export default function TeamsPage() {
   const { data: session, status } = useSession();
   const { data: teams, isLoading } = trpc.team.getMyTeams.useQuery(
     undefined,
-    { enabled: !!session?.user }
+    { enabled: !!session?.user?.id }
   );
 
   if (status === "unauthenticated") {
