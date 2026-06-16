@@ -4,95 +4,88 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── CSS Variables ─────────────────────────────────────────────────────── */
+/* ─── Design Tokens ─────────────────────────────────────────────────────── */
 :root {
-  --brand: #E8390E;
-  --brand-dark: #C42E09;
-  --brand-glow: rgba(232,57,14,0.35);
+  --brand:       #E8390E;
+  --brand-dark:  #C42E09;
+  --brand-glow:  rgba(232, 57, 14, 0.35);
 
+  --s0: #0A0A0A;
+  --s1: #111111;
+  --s2: #171717;
+  --s3: #222222;
+
+  --b1: rgba(255,255,255,0.06);
+  --b2: rgba(255,255,255,0.10);
+  --b3: rgba(255,255,255,0.16);
+
+  --t1: #FFFFFF;
+  --t2: rgba(255,255,255,0.60);
+  --t3: rgba(255,255,255,0.35);
+  --t4: rgba(255,255,255,0.18);
+
+  /* legacy aliases */
   --surface-0: #0A0A0A;
   --surface-1: #111111;
   --surface-2: #1A1A1A;
   --surface-3: #222222;
-
   --border: rgba(255,255,255,0.08);
   --border-strong: rgba(255,255,255,0.15);
-
   --ink: #FFFFFF;
   --ink-2: rgba(255,255,255,0.60);
   --ink-3: rgba(255,255,255,0.35);
   --ink-4: rgba(255,255,255,0.15);
 }
 
-/* ─── Reset & Base ──────────────────────────────────────────────────────── */
+/* ─── Reset ─────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Prevent iOS text size adjust on rotation */
   -webkit-text-size-adjust: 100%;
-  /* Smooth native scrolling */
   scroll-behavior: smooth;
 }
 
 body {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  background-color: var(--surface-0);
-  color: var(--ink);
+  background-color: var(--s0);
+  color: var(--t1);
   line-height: 1.5;
-  /* Prevent rubber-band bounce on iOS */
   overscroll-behavior: none;
-  /* Full-height */
   min-height: 100dvh;
-  /* Native feel: no blue selection flash on touch */
   -webkit-tap-highlight-color: transparent;
-  /* Prevent accidental text selection during swipes */
   -webkit-user-select: none;
   user-select: none;
 }
 
-/* Allow text selection where needed */
-p, span, h1, h2, h3, h4, input, textarea { -webkit-user-select: text; user-select: text; }
+p, span, h1, h2, h3, h4, h5, h6, label, input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
 
-/* ─── Scrollbars ────────────────────────────────────────────────────────── */
+/* ─── Safe Area ──────────────────────────────────────────────────────────── */
+.pb-safe  { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.pt-safe  { padding-top:    env(safe-area-inset-top, 0px); }
+.pl-safe  { padding-left:   env(safe-area-inset-left, 0px); }
+.pr-safe  { padding-right:  env(safe-area-inset-right, 0px); }
+.pt-status { padding-top: max(env(safe-area-inset-top, 0px), 44px); }
+.mb-nav   { margin-bottom:  calc(env(safe-area-inset-bottom, 0px) + 80px); }
+.pb-nav   { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 80px); }
+
+/* ─── Scrollbars ─────────────────────────────────────────────────────────── */
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
-
-/* Native-feel momentum scrolling */
 .scroll-native { -webkit-overflow-scrolling: touch; }
 
-/* ─── Safe Area Utilities ───────────────────────────────────────────────── */
-.pb-safe  { padding-bottom: env(safe-area-inset-bottom, 0px); }
-.pt-safe  { padding-top: env(safe-area-inset-top, 0px); }
-.pl-safe  { padding-left: env(safe-area-inset-left, 0px); }
-.pr-safe  { padding-right: env(safe-area-inset-right, 0px); }
-
-.pt-status { padding-top: max(env(safe-area-inset-top, 0px), 44px); }
-.mb-nav    { margin-bottom: calc(env(safe-area-inset-bottom, 0px) + 64px); }
-
-/* ─── Monospace Font ────────────────────────────────────────────────────── */
-.font-mono { font-family: 'JetBrains Mono', 'Cascadia Code', monospace; }
-
-/* ─── Input Reset ───────────────────────────────────────────────────────── */
-/* Force 16px on mobile to prevent iOS Safari auto-zoom on focus */
-input, textarea, select {
-  font-size: 16px !important;
+/* ─── Surfaces ───────────────────────────────────────────────────────────── */
+.card {
+  background: var(--s1);
+  border: 1px solid var(--b2);
+  border-radius: 20px;
 }
 
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
-
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 30px #111 inset !important;
-  -webkit-text-fill-color: #fff !important;
-  caret-color: #fff;
-}
-
-/* ─── Glass Card Utility ────────────────────────────────────────────────── */
 .glass-card {
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.08);
@@ -107,38 +100,100 @@ input:-webkit-autofill:focus {
   -webkit-backdrop-filter: blur(30px);
 }
 
-/* ─── Glow Utilities ────────────────────────────────────────────────────── */
-.glow-brand  { box-shadow: 0 0 30px var(--brand-glow); }
-.glow-brand-lg { box-shadow: 0 0 60px var(--brand-glow), 0 0 120px rgba(232,57,14,0.15); }
-
-/* ─── Bottom Nav Blur ───────────────────────────────────────────────────── */
-.bottom-nav-bg {
-  background: rgba(10,10,10,0.85);
-  backdrop-filter: saturate(180%) blur(24px);
-  -webkit-backdrop-filter: saturate(180%) blur(24px);
+/* ─── Input System ────────────────────────────────────────────────────────── */
+/* Prevent iOS zoom on focus — must be ≥16px */
+input, textarea, select {
+  font-size: max(16px, 1em) !important;
+  font-family: inherit;
 }
 
-/* ─── Touch button feedback ─────────────────────────────────────────────── */
+.input-dark {
+  display: block;
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  padding: 14px 16px;
+  color: #fff;
+  font-size: 15px !important;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.18s, background 0.18s;
+  -webkit-appearance: none;
+}
+.input-dark::placeholder { color: rgba(255,255,255,0.30); }
+.input-dark:focus {
+  border-color: var(--brand);
+  background: rgba(255,255,255,0.08);
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 40px #111 inset !important;
+  -webkit-text-fill-color: #fff !important;
+  caret-color: #fff;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+/* ─── Glows ──────────────────────────────────────────────────────────────── */
+.glow-brand   { box-shadow: 0 0 30px var(--brand-glow); }
+.glow-brand-lg { box-shadow: 0 0 60px var(--brand-glow), 0 0 120px rgba(232,57,14,0.15); }
+
+/* ─── Bottom Nav ─────────────────────────────────────────────────────────── */
+.bottom-nav-bg {
+  background: rgba(10,10,10,0.90);
+  backdrop-filter: saturate(180%) blur(28px);
+  -webkit-backdrop-filter: saturate(180%) blur(28px);
+}
+
+/* ─── Misc ───────────────────────────────────────────────────────────────── */
 .btn-native {
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
-
-/* ─── Performance hint for animated elements ────────────────────────────── */
+.font-mono { font-family: 'JetBrains Mono', 'Cascadia Code', monospace; }
 .gpu { will-change: transform; transform: translateZ(0); }
 
-/* ─── Live dot pulse ────────────────────────────────────────────────────── */
+/* ─── Animations ─────────────────────────────────────────────────────────── */
 @keyframes live-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.85); }
+  50%       { opacity: 0.4; transform: scale(0.82); }
 }
 .live-dot { animation: live-pulse 1.4s ease-in-out infinite; }
 
-/* ─── Score pop animation ───────────────────────────────────────────────── */
 @keyframes score-pop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.15); }
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.18); }
   100% { transform: scale(1); }
 }
-.score-pop { animation: score-pop 0.25s ease-out; }
+.score-pop { animation: score-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--s1) 25%, var(--s2) 50%, var(--s1) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+  border-radius: 12px;
+}
+
+/* Floating cricket ball bounce (decorative) */
+@keyframes cricket-float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33%       { transform: translateY(-8px) rotate(120deg); }
+  66%       { transform: translateY(-4px) rotate(240deg); }
+}
+.cricket-float { animation: cricket-float 3s ease-in-out infinite; }
+
+/* Seam spin on live dot */
+@keyframes seam-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.seam-spin { animation: seam-spin 1.2s linear infinite; }

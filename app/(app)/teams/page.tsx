@@ -1,134 +1,176 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Plus, Users, Crown, ChevronRight, ShieldCheck } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Users, Crown, ChevronRight, Shield, Star } from "lucide-react";
 import Link from "next/link";
 import { trpc } from "@/app/_trpc/client";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
-function TeamColorBadge({ color, shortName }: { color: string; shortName: string }) {
-  return (
-    <div
-      className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-white text-sm shrink-0"
-      style={{ backgroundColor: color }}
-    >
-      {shortName}
-    </div>
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 18 },
+  animate: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 280, damping: 26, delay } },
+});
+
+function RoleBadge({ role }: { role: string }) {
+  if (role === "CAPTAIN") return (
+    <span className="flex items-center gap-1 text-[10px] font-black text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full shrink-0">
+      <Crown className="w-2.5 h-2.5" /> C
+    </span>
   );
+  if (role === "VICE_CAPTAIN") return (
+    <span className="text-[10px] font-black text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full shrink-0">VC</span>
+  );
+  return null;
 }
 
-import { useSession } from "next-auth/react";
-
 export default function TeamsPage() {
+  const router = useRouter();
   const { data: session, status } = useSession();
-  const { data: teams, isLoading } = trpc.team.getMyTeams.useQuery(undefined, { enabled: !!session?.user });
+  const { data: teams, isLoading } = trpc.team.getMyTeams.useQuery(
+    undefined,
+    { enabled: !!session?.user }
+  );
 
   if (status === "unauthenticated") {
     return (
-      <div className="min-h-screen bg-[#FAFAF8] flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
-          <Users className="w-8 h-8" />
-        </div>
-        <h2 className="text-xl font-bold text-[#1A1A1A] mb-2">Login Required</h2>
-        <p className="text-[#8A8278] text-sm mb-6">Create an account or login to manage your teams and add players.</p>
-        <Link href="/login">
-          <button className="bg-[#E8390E] text-white font-semibold px-8 py-3.5 rounded-xl shadow-[0_4px_16px_rgba(232,57,14,0.35)]">
-            Login / Register
-          </button>
-        </Link>
+      <div className="min-h-[100dvh] bg-[#0A0A0A] flex flex-col items-center justify-center px-6 text-center">
+        <motion.div
+          animate={{ rotate: [0, -10, 10, -10, 0] }}
+          transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+          className="text-6xl mb-5"
+        >🏏</motion.div>
+        <h2 className="text-2xl font-black text-white mb-2">Join the Field</h2>
+        <p className="text-white/40 text-sm mb-8 max-w-xs leading-relaxed">
+          Sign in to create your team, add players, and start competing.
+        </p>
+        <motion.button whileTap={{ scale: 0.95 }} onClick={() => router.push("/login")}
+          className="bg-gradient-to-r from-[#E8390E] to-[#C42E09] text-white font-bold px-8 py-4 rounded-2xl shadow-[0_4px_24px_rgba(232,57,14,0.4)] btn-native text-sm">
+          Sign In
+        </motion.button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] pb-28">
-      {/* Header */}
-      <div className="glass-card border-b border-[rgba(107,74,42,0.13)] px-5 pt-12 pb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-[#1A1A1A]">My Teams</h1>
-          <p className="text-sm text-[#8A8278] mt-0.5">{teams?.length ?? 0} team{teams?.length !== 1 ? "s" : ""}</p>
-        </div>
-        <Link href="/teams/new">
-          <motion.div
-            whileTap={{ scale: 0.93 }}
-            className="w-10 h-10 bg-[#E8390E] rounded-2xl flex items-center justify-center shadow-[0_4px_12px_rgba(232,57,14,0.35)]"
-          >
-            <Plus className="w-5 h-5 text-white" strokeWidth={2.5} />
-          </motion.div>
-        </Link>
+    <div className="min-h-[100dvh] bg-[#0A0A0A]">
+      {/* Ambient glow */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-0 left-0 w-72 h-72 bg-blue-600/5 rounded-full blur-[100px]" />
       </div>
 
-      <div className="px-4 pt-5 space-y-3">
-        {isLoading ? (
-          [...Array(3)].map((_, i) => (
-            <div key={i} className="bg-transparent rounded-2xl border border-[rgba(107,74,42,0.13)] p-4 h-20 animate-pulse" />
-          ))
-        ) : !teams || teams.length === 0 ? (
+      {/* Header */}
+      <motion.div {...fadeUp(0)} className="relative z-10 px-5 pt-14 pb-5 border-b border-white/6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-white/35 text-xs font-semibold uppercase tracking-widest mb-0.5">My Squad</p>
+            <h1 className="text-2xl font-black text-white">Teams</h1>
+          </div>
+          <Link href="/teams/new">
+            <motion.div
+              whileTap={{ scale: 0.88 }}
+              whileHover={{ scale: 1.05 }}
+              className="w-11 h-11 bg-gradient-to-br from-[#E8390E] to-[#C42E09] rounded-2xl flex items-center justify-center shadow-[0_4px_16px_rgba(232,57,14,0.4)] btn-native"
+            >
+              <Plus className="w-5 h-5 text-white" strokeWidth={2.8} />
+            </motion.div>
+          </Link>
+        </div>
+        {teams && teams.length > 0 && (
+          <p className="text-white/35 text-xs mt-1.5">
+            {teams.length} team{teams.length !== 1 ? "s" : ""} · {teams.reduce((a: number, t: any) => a + (t.memberCount || 0), 0)} players
+          </p>
+        )}
+      </motion.div>
+
+      <div className="relative z-10 px-4 pt-4 pb-nav space-y-3">
+        {/* Loading skeletons */}
+        {isLoading && [...Array(3)].map((_, i) => (
+          <div key={i} className="skeleton h-20 rounded-2xl" />
+        ))}
+
+        {/* Empty state */}
+        {!isLoading && (!teams || teams.length === 0) && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center pt-24 text-center px-6"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="glass-card rounded-3xl p-8 text-center mt-8"
           >
-            <div className="text-6xl mb-4">🏏</div>
-            <h2 className="text-xl font-bold text-[#1A1A1A] mb-2">No teams yet</h2>
-            <p className="text-[#8A8278] text-sm mb-6 leading-relaxed">
-              Create your team, add players, and start competing in tournaments.
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              className="text-6xl mb-4"
+            >🛡️</motion.div>
+            <h2 className="text-xl font-black text-white mb-2">No Teams Yet</h2>
+            <p className="text-white/40 text-sm mb-6 leading-relaxed">
+              Build your squad, pick your colors, and start your cricket journey.
             </p>
             <Link href="/teams/new">
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                className="bg-[#E8390E] text-white font-semibold px-8 py-3.5 rounded-xl shadow-[0_4px_16px_rgba(232,57,14,0.35)]"
-              >
-                Create Your Team
+              <motion.button whileTap={{ scale: 0.96 }}
+                className="bg-gradient-to-r from-[#E8390E] to-[#C42E09] text-white font-bold px-8 py-4 rounded-2xl text-sm shadow-[0_4px_16px_rgba(232,57,14,0.35)] btn-native">
+                Create Your First Team
               </motion.button>
             </Link>
           </motion.div>
-        ) : (
-          teams.map((team, i) => (
-            <Link href={`/teams/${team.id}`} key={team.id}>
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.06 }}
-                whileTap={{ scale: 0.98 }}
-                className="bg-transparent rounded-2xl border border-[rgba(107,74,42,0.13)] p-4 flex items-center gap-4 hover:border-[rgba(107,74,42,0.25)] transition-colors"
-              >
-                <TeamColorBadge color={team.colorHex} shortName={team.shortName} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <h3 className="font-semibold text-[#1A1A1A] truncate">{team.name}</h3>
-                    {team.myRole === "CAPTAIN" && (
-                      <span className="flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">
-                        <Crown className="w-3 h-3" /> Captain
-                      </span>
-                    )}
-                    {team.myRole === "VICE_CAPTAIN" && (
-                      <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full shrink-0">
-                        Vice Captain
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-[#8A8278]">
-                    <Users className="w-3 h-3" />
-                    {team.memberCount} member{team.memberCount !== 1 ? "s" : ""}
-                    {team.homeGround && <span className="ml-2">📍 {team.homeGround}</span>}
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-[#8A8278] shrink-0" />
-              </motion.div>
-            </Link>
-          ))
         )}
 
-        {teams && teams.length > 0 && (
-          <Link href="/teams/new">
-            <motion.div
-              whileTap={{ scale: 0.98 }}
-              className="bg-transparent rounded-2xl border-2 border-dashed border-[rgba(107,74,42,0.2)] p-4 flex items-center justify-center gap-2 text-[#8A8278] hover:border-[#E8390E] hover:text-[#E8390E] transition-colors mt-2"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="text-sm font-medium">Create Another Team</span>
+        {/* Team cards */}
+        <AnimatePresence>
+          {teams && teams.map((team: any, i: number) => (
+            <motion.div key={team.id} {...fadeUp(i * 0.07)}>
+              <Link href={`/teams/${team.id}`}>
+                <motion.div
+                  whileTap={{ scale: 0.975 }}
+                  className="glass-card rounded-2xl p-4 flex items-center gap-4 btn-native active:bg-white/6 transition-colors"
+                >
+                  {/* Team badge */}
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center font-black text-white text-sm shrink-0 shadow-lg"
+                    style={{ backgroundColor: team.colorHex }}
+                  >
+                    <div>
+                      <div className="text-center text-sm font-black">{team.shortName}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-bold text-white truncate text-base">{team.name}</h3>
+                      <RoleBadge role={team.myRole} />
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-white/40">
+                      <span className="flex items-center gap-1">
+                        <Users className="w-3 h-3" />
+                        {team.memberCount} player{team.memberCount !== 1 ? "s" : ""}
+                      </span>
+                      {team.homeGround && (
+                        <span className="flex items-center gap-1 truncate">
+                          <span>📍</span>
+                          <span className="truncate">{team.homeGround}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <ChevronRight className="w-4 h-4 text-white/20 shrink-0" />
+                </motion.div>
+              </Link>
             </motion.div>
-          </Link>
+          ))}
+        </AnimatePresence>
+
+        {/* Add another team */}
+        {teams && teams.length > 0 && (
+          <motion.div {...fadeUp(teams.length * 0.07 + 0.05)}>
+            <Link href="/teams/new">
+              <motion.div whileTap={{ scale: 0.97 }}
+                className="rounded-2xl border-2 border-dashed border-white/10 p-4 flex items-center justify-center gap-2 text-white/30 hover:border-[#E8390E]/40 hover:text-[#E8390E]/60 transition-colors btn-native">
+                <Plus className="w-4 h-4" />
+                <span className="text-sm font-semibold">Create Another Team</span>
+              </motion.div>
+            </Link>
+          </motion.div>
         )}
       </div>
     </div>

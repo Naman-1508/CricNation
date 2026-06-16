@@ -25,6 +25,9 @@ export const playerRouter = router({
   getProfile: publicProcedure
     .input(z.object({ userId: z.string() }))
     .query(async ({ input, ctx }) => {
+      if (!input.userId || input.userId === 'undefined') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'User ID is required' });
+      }
       const user = await ctx.prisma.user.findUnique({
         where: { id: input.userId },
         include: {
@@ -34,7 +37,7 @@ export const playerRouter = router({
           awards: true,
         },
       });
-      if (!user) throw new TRPCError({ code: 'NOT_FOUND' });
+      if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
 
       // ── Batting balls ────────────────────────────────────────────────
       const battingBalls = await ctx.prisma.ballByBall.findMany({
